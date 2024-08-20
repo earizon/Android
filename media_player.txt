@@ -1,0 +1,302 @@
+# MediaPlayer 
+* MediaPlayer class can fetch, decode, and play both audio and video
+  with minimal setup.
+ (State diagram: <http://developer.android.com/images/mediaplayer_state_diagram.gif>)
+
+   ```
+  | MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.sound_file_1);
+  | 
+  | mediaPlayer.start(); // no need to call prepare(); create() does that for you
+  | -
+  |  here is how you might play from a URI available locally in the system
+  | (that you obtained through a Content Resolver, for instance):
+  | 
+  | Uri myUri = ....; // initialize Uri here
+  | 
+  | MediaPlayer mediaPlayer = new MediaPlayer();
+  | 
+  | mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+  | 
+  | mediaPlayer.setDataSource(getApplicationContext(), myUri);
+  | 
+  | mediaPlayer.prepare();  // <- can take a long time to execute, because
+  |                         //    it might involve fetching and decoding media
+  |                         //    data
+  | mediaPlayer.start();
+ ```
+* Playing from a remote URL via HTTP streaming looks like this:
+ ```
+ | String url = "http://........"; // your URL here
+ | 
+ | MediaPlayer mediaPlayer = new MediaPlayer();
+ | 
+ | mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+ | 
+ | mediaPlayer.setDataSource(url);
+ | mediaPlayer.prepare(); // might take long! (for buffering, etc)
+ | 
+ | mediaPlayer.start();
+ | - Here's how you should release and then nullify your MediaPlayer:
+ | 
+ | mediaPlayer.release();
+ | mediaPlayer = null;
+ ```
+
+* You may be wondering what happens if you want to continue playing
+  "background media" even when the user leaves your activity, much in the same
+  way that the built-in Music application behaves. In this case, what you need is
+  a MediaPlayer controlled by a Service, as
+  discussed in Using a Service with MediaPlayer.
+
+  
+## encoding and muxing video using mediacodec and mediamuxer
+[[{]]
+* <http://stackoverflow.com/questions/23984200/encoding-and-muxing-video-using-mediacodec-and-mediamuxer>
+
+I am developing an App where I decode a video and replace certain 
+frames and re-encode using MediaMuxer and MediaCodec. The App works 
+if I do not replace any frames (except for 1080p videos as I explain 
+below), but when I do, the frames after the replaced ones are 
+pixelated and the video is choppy.
+
+Also, when I try my app with 1920x1080 videos, I get a strange 
+output, where the video is not showing anything, until I scroll to 
+the beginning of the video, then the video starts showing up (but 
+with the same problem mentioned before of pixalation after the edit.
+
+Here is how I configure my encoder:
+
+ ```
+ | Video_format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, interval);
+ | Video_format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate);
+ | Video_format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
+ | Video_format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 0);
+ | int color_format=MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar;
+ | Video_format.setInteger(MediaFormat.KEY_COLOR_FORMAT, color_format);
+ | 
+ | encoder.configure(Video_format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+ ```
+
+So to sum up, I have two problems:
+1. Pixelated frames and choppy video after modified frames.
+2. Corrupted 1920x1080 videos unless I scroll to the beginning.
+
+... Edit Here is a sample 1080p video unedited, which gives a green 
+screen when I play on VLC and plays incorrectly on the phone unless I 
+scroll to start and now strangely working normally on YouTube, except 
+for a green frame at the start
+ ...  Here is a sample 720p video edited with also a green frame at 
+the start and clear pixelation and lag after the edit
+Here is the code I use to decode an re-encode:
+
+ ```
+ | do{
+ |   Bitmap b1;
+ |
+ |   if(edited_frames.containsKey(extractor.getSampleTime())) 
+ |     b1=BitmapFactory.decodeFile(edited_frames.get(extractor.getSampleTime()));
+ |   else b1=decode(extractor.getSampleTime(),Preview_width,Preview_Height);
+ |   if(b1==null) continue;
+ |   Bitmap b_scal=Bitmap.createScaledBitmap(b1, Preview_width, Preview_Height, false);
+ |   if(b_scal==null) continue;
+ |   encode(b_scal, encoder, muxer, videoTrackIndex);
+ |   lastTime=extractor.getSampleTime();
+ | }while(extractor.advance());
+ ```
+
+* The decode method:
+  ```
+  | private Bitmap decode(final long time,final int width,final int height){
+  |     MediaFormat newFormat = codec.getOutputFormat();
+  |     Bitmap b = null;
+  |     final int TIMEOUT_USEC = 10000;
+  |     ByteBuffer[] decoderInputBuffers = codec.getInputBuffers();
+  |     MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+  | 
+  |     boolean outputDone = false;
+  |     boolean inputDone = false;
+  |     while (!outputDone) {
+  | 
+  |         if (!inputDone) {
+  |             int inputBufIndex = codec.dequeueInputBuffer(TIMEOUT_USEC);
+  |             if (inputBufIndex >= 0) {
+  |                 ByteBuffer inputBuf = decoderInputBuffers[inputBufIndex];
+  | 
+  |                 int chunkSize = extractor.readSampleData(inputBuf, 0);
+  |                 if (chunkSize < 0) {
+  |                     codec.queueInputBuffer(inputBufIndex, 0, 0, 0L,
+  |                             MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+  |                     inputDone = true;
+  |                 } else {
+  |                     long presentationTimeUs = extractor.getSampleTime();
+  |                     codec.queueInputBuffer(inputBufIndex, 0, chunkSize,
+  |                             presentationTimeUs, 0 );
+  | 
+  |                 }
+  |                 inputBuf.clear();
+  |                 decoderInputBuffers[inputBufIndex].clear();
+  |             } else {
+  | 
+  |             }
+  |         }
+  |         ByteBuffer[] outputBuffers;
+  |         if (!outputDone) {
+  |             int decoderStatus = codec.dequeueOutputBuffer(info, TIMEOUT_USEC);
+  |             if (decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
+  |             } else if (decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
+  |                 outputBuffers = codec.getOutputBuffers();
+  |             } else if (decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+  |                 newFormat = codec.getOutputFormat();
+  |             } else if (decoderStatus < 0) {
+  |             } else {
+  |                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+  |                     outputDone = true;
+  |                 }
+  | 
+  |                 boolean doRender = (info.size != 0);
+  | 
+  |                 codec.releaseOutputBuffer(decoderStatus, false);
+  |                 if (doRender) {
+  | 
+  |                     outputBuffers = codec.getOutputBuffers();
+  |                     ByteBuffer buffer = outputBuffers[decoderStatus];
+  |                     buffer = outputBuffers[decoderStatus];
+  | 
+  | 
+  |                     outputDone = true;
+  | 
+  |                     byte[] outData = new byte[info.size];
+  |                     buffer.get(outData);
+  |                     buffer.clear();
+  |                     outputBuffers[decoderStatus].clear();
+  |                     try {
+  |                         int colr_format=-1;
+  |                         if(newFormat!=null && newFormat.getInteger(MediaFormat.KEY_COLOR_FORMAT)==21){
+  |                             colr_format=ImageFormat.NV21;
+  |                         }else if(newFormat!=null && newFormat.getInteger(MediaFormat.KEY_COLOR_FORMAT)!=21){
+  |                             Toast.makeText(getApplicationContext(), "Unknown color format "+format.getInteger(MediaFormat.KEY_COLOR_FORMAT), Toast.LENGTH_LONG).show();
+  |                             finish();
+  |                             return null;
+  |                         }
+  | 
+  |                         int[] arrrr=new int[format.getInteger(MediaFormat.KEY_WIDTH)* format.getInteger(MediaFormat.KEY_HEIGHT)];
+  |                         YUV_NV21_TO_RGB(arrrr, outData, format.getInteger(MediaFormat.KEY_WIDTH), format.getInteger(MediaFormat.KEY_HEIGHT));
+  | 
+  |                         lastPresentationTimeUs = info.presentationTimeUs;
+  | 
+  |                         b = Bitmap.createBitmap(arrrr, format.getInteger(MediaFormat.KEY_WIDTH), format.getInteger(MediaFormat.KEY_HEIGHT), Bitmap.Config.ARGB_8888);
+  | 
+  | 
+  |                     } catch (Exception e) {
+  |                         e.printStackTrace();
+  |                     }
+  | 
+  | 
+  |                 }
+  |             }
+  |         }
+  |     }
+  |     return b;
+  | }
+ ```
+
+* And here is the encode method:
+
+ ```
+  | private void encode(Bitmap b, MediaCodec encoder, MediaMuxer muxer, int track_indx){
+  |     MediaCodec.BufferInfo enc_info = new MediaCodec.BufferInfo();
+  |     boolean enc_outputDone = false;
+  |     boolean enc_inputDone = false;
+  | 
+  |     final int TIMEOUT_USEC = 10000;
+  | 
+  |     ByteBuffer[] encoderInputBuffers = encoder.getInputBuffers();
+  |     ByteBuffer[] enc_outputBuffers = encoder.getOutputBuffers();
+  | 
+  |     while (!enc_outputDone) {
+  | 
+  |         if (!enc_inputDone) {
+  |             int inputBufIndex = encoder.dequeueInputBuffer(TIMEOUT_USEC);
+  |             if (inputBufIndex >= 0) {
+  |                 ByteBuffer inputBuf = encoderInputBuffers[inputBufIndex];
+  |                 int chunkSize = 0;
+  | 
+  | 
+  | 
+  |                 if(b==null){
+  | 
+  |                 }else{
+  |                     int mWidth = b.getWidth();
+  |                     int mHeight = b.getHeight();
+  | 
+  |                     byte [] yuv = new byte[mWidth*mHeight*3/2];
+  | 
+  |                     int [] argb = new int[mWidth * mHeight];
+  | 
+  |                     b.getPixels(argb, 0, mWidth, 0, 0, mWidth, mHeight);
+  | 
+  |                     encodeYUV420SP(yuv, argb, mWidth, mHeight);
+  | 
+  |                     b.recycle();
+  |                     b=null;
+  |                     inputBuf.put(yuv);
+  |                     chunkSize = yuv.length;
+  |                 }
+  | 
+  | 
+  | 
+  | 
+  |                 if (chunkSize < 0) {
+  |                     encoder.queueInputBuffer(inputBufIndex, 0, 0, 0L,
+  |                             MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+  |                 } else {
+  |                     long presentationTimeUs = extractor.getSampleTime();
+  |                     Log.i("Encode","Encode Time: "+presentationTimeUs);
+  |                     encoder.queueInputBuffer(inputBufIndex, 0, chunkSize,
+  |                             presentationTimeUs, 0 );
+  |                     inputBuf.clear();
+  | 
+  |                     encoderInputBuffers[inputBufIndex].clear();
+  |                     enc_inputDone=true;
+  |                 }
+  | 
+  |             }
+  |         }
+  |             if (!enc_outputDone) {
+  |                 int enc_decoderStatus = encoder.dequeueOutputBuffer(enc_info, TIMEOUT_USEC);
+  |                 if (enc_decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
+  |                 } else if (enc_decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
+  |                     enc_outputBuffers = encoder.getOutputBuffers();
+  |                 } else if (enc_decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+  |                     MediaFormat newFormat = encoder.getOutputFormat();
+  |                 } else if (enc_decoderStatus < 0) {
+  |                 } else {
+  |                     if ((enc_info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+  |                         enc_outputDone = true;
+  |                     }
+  | 
+  |                     boolean enc_doRender = (enc_info.size != 0);
+  | 
+  |                     encoder.releaseOutputBuffer(enc_decoderStatus, false);
+  |                     if (enc_doRender) {
+  | 
+  |                         enc_outputDone = true;
+  |                         ByteBuffer enc_buffer = enc_outputBuffers[enc_decoderStatus];
+  | 
+  |                         try {
+  |                             muxer.writeSampleData(track_indx, enc_buffer,
+  |                                     enc_info);
+  |                         } catch (Exception e) {
+  |                             e.printStackTrace();
+  |                         }
+  |                         enc_buffer.clear();
+  |                         enc_outputBuffers[enc_decoderStatus].clear();
+  |                     }
+  |                 }
+  |             }
+  | 
+  |     }
+  | 
+  | }
+ ```
+[[}]]

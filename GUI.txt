@@ -1,0 +1,140 @@
+# GUI
+
+
+* http://droiddraw.org/widgetguide.html (Visual guide to Android GUI Widgets)
+* Android ICON Standard Gallery (supported Android version)
+  * http://androiddrawables.com/
+  * http://androiddrawables.com/Other.html
+
+* The graphical user interface for an Android app is built using a
+  hierarchy of View and ViewGroup objects. View objects are usually UI
+  widgets such as buttons or text fields and ViewGroup objects are
+  *invisible view containers* that define how the child views are laid
+  out, such as in a grid or a vertical list.
+  ```
+  ┌────────────────── ... ◕ 3:49 ┐
+  │                         🔍 ┊ │ <·· App Action Bar
+  ├──────────────────────────────┤
+  │ ...                          │
+
+  ```
+
+# FRAGMENTS [[{UI.101.fragment]]
+* <http://developer.android.com/training/basics/fragments/index.html>
+* <http://developer.android.com/guide/components/fragments.html>
+
+  A Fragment (class) behaves somewhat like a nested activity that can
+  define its own layout and manage its own lifecycle.
+
+    You can think of a fragment as a modular section of an activity,
+  which has its own lifecycle, receives its own input events, and which
+  you can add or remove while the activity is running (sort of like a
+  "sub activity" that you can reuse in different activities).
+
+  ```
+  | import android.os.Bundle;
+  | import android.support.v4.app.Fragment; // <- Use std. path for 2.2+
+  | import android.view.LayoutInflater;
+  | import android.view.ViewGroup;
+  | 
+  | public class ArticleFragment extends Fragment {
+  |     @Override
+  |     public View onCreateView(
+  |         LayoutInflater inflater,
+  |         ViewGroup container /*parent container, used as reference*/,
+  |         Bundle savedInstanceState) {
+  |         // Inflate the layout for this fragment
+  |         return inflater.inflate(R.layout.article_view, container, false);
+  |     }
+  | }
+  ```
+
+* KEY-POINT: All Fragment-to-Fragment communication is done through the 
+  associated Activity.  Two Fragments should never communicate directly.
+
+* To allow a Fragment to communicate up to its Activity, *you can*
+  define an interface in the Fragment class and implement it within the
+  Activity.  The Fragment captures  the interface implementation during
+  its onAttach() lifecycle method and can then call the Interface
+  methods in order to communicate with the Activity.
+  (The host activity can deliver messages to a fragment by capturing
+  the Fragment instance with findFragmentById(), then directly call the
+  fragment's public methods)
+
+  ```
+  | public class FragHeadlines extend Fragment {
+  |   // IOnHLSelected: implemented by Container activity.
+  |   public interface IOnHLSelected {
+  |     public void onArticleSelected(int position);
+  |   }
+  |
+  |   IOnHLSelected callback01;  //  <·· Alt: getActivity(); can be used to fetch
+  |                              //           a ref. to parent container. This allows
+  |   @Override                  //           to fail-fast if partent does not implement
+  |                              //           the expected interface.
+  |   public void onAttach(Activity activity) {
+  |     super.onAttach(activity);
+  |     try {
+  |       callback01 = (IOnHLSelected) activity;
+  |     } catch (ClassCastException e) {
+  |       throw new RuntimeException(
+  |        "IOnHLSelected missing in "+activity.toString());
+  |     }
+  |   }
+  |  
+  |   @Override
+  |   public void onListItemClick(
+  |     ListView l, View v, int position, long id) {
+  |     callback01.onArticleSelected(position);
+  |   }
+  |   ...
+  | }
+  ```
+
+* To include a fragment in a "parent" container (activity or layout):
+  ```
+  | public static
+  | class MainActivity extends FragmentActivity
+  |       implements FragHeadlines.IOnHLSelected{
+  |   ...
+  |   @Override /* IOnHLSelected */
+  |   public void onArticleSelected(int position)     // <·· "callback" "listening" fragment events
+  |   { ...}
+  |
+  |   @Override public void onCreate(Bundle State) {  // <·· Alt1: Programatically at RunTime
+  |     ...
+  |     if (findViewById(R.id.container01) == null) { return; }
+  |     var frag01 = new FragHeadlines();
+  |     frag01.setArguments(getIntent().getExtras());
+  |     ...                                           //    'FragmentManager' allows to add/remove/replace
+  |     var fragMgr = getFragmentManager();           //    fragments at runtime. The initial fragment(s)
+  |     var fragTrans = fragMgr.beginTransaction();   //    must be added at (acitivity)onCreate()
+  |     fragTrans.add(R.id.container01, frag01);      //<·· an empty frameLayout allows to replace fragments
+  |     fragTrans.addToBackStack(); // (Optional)     //    <FrameLayout  ...
+  |     fragmentTransaction.commit();                 //       android:id="@+id/container01"
+  |     ...                                           //       android:layout_width="match_parent" ... /> 
+  |   }
+  |
+  |   public void someOtherMethod(...) {
+  |     var fragMgr = getFragmentManager();
+  |     var frag01 = fragMgr.findFragmentById(id);    // <·· obtain a ref to fragment @ runtime
+  |     var frag02 = fragMgr.findFragmentByTag(tag);  //     Search in ContentView and Back-Stack
+  |   }
+  | }
+  ```
+
+  ```
+  ┌─ res/layout─large/news_articles.xml ────   <·· Alt2: Declare in XML.
+  │ <LinearLayout ...  >                           NOTE: in this case it will NOT be possible
+  │   <fragment                                          to remove at runtime.
+  │     android:name="com....FragHeadlines"
+  │     android:id="@+id/headlines_fragment"
+  │     android:layout_weight="1"
+  │     android:layout_width="0dp"
+  │     android:layout_height="match_parent" />
+  │   ...
+  │ </LinearLayout>
+  └─────────────────────────────────────────
+  ```
+
+[[UI.101.fragment}]]

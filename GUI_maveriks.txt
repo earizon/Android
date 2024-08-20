@@ -1,0 +1,65 @@
+[[{architecture.coroutines,architecture.reactive,01_PM.TODO,01_PM.low_code]]
+# Mavericks, React-like lib by AirBnB 
+* <https://github.com/airbnb/mavericks>
+* <https://airbnb.io/mavericks> 
+* built on top of Jetpack ViewModel:
+  Instead of exposing individual state properties,
+  your ViewModel is generic on a single immutable data
+  class that your ViewModel updates and your UI renders.
+   Mavericks is built on the principle that a screen is [[{02_doc_has.KEY-POINT]]
+  a function of its state.                              [[}]]
+* "tons of goodies": automatic lifecycle handling, easy mapping of
+  async operations to state, comprehensive testing suite, ...
+* Wide community adoption.
+* Dagger and Hilt (dep injection libs) compatibility.
+* Mavericks 2.0: ground-up (but FULLY BACKWARD COMPATIBLE) rewrite of
+  Mavericks 1.0 built for Coroutines.  The primary artifact no longer
+  has a dependency on rxjava at all and 'mavericks-rxjava2' is used for
+  backward compatible class names  as  a drop-in replacement for
+  C&P from https://gpeal.medium.com/introducing-mavericks-mvrx-2-0-57d430a94070
+  * Originally: RxJava, "beloved standard" of asynch programming.
+  * Today: most apps transitioning to coroutines.
+
+## Testing, Mocking, and Launching:
+- mavericks-mocking (2.0+) library: allows to capture the state of
+  any screen at a specific point in time that can then be reused
+  to relaunch the screen in that state at any point
+  (via mavericks-launcher) or be reused as test fixtures.
+  NO MORE CLICKING THROUGH 50 SCREENS EVERY TIME YOU BUILD A
+  NEW APP JUST TO TEST A FEATURE DEEP IN A FLOW.
+  [[{02_doc_has.KEY-point}]]
+
+## Mavericks vs Jetpack Compose
+One of the most common questions we get is “Will Mavericks work or
+still provide value once Jetpack Compose exists”. The answer is yes!
+
+In a Compose world, you still need a place to handle complex business 
+logic, do dependency injection, and share data across components.
+There is a reason that Google provides ViewModel interop out of the
+box. We are still exploring exactly what the API for Mavericks will
+look like but rest assured, it is coming. We have already spent some
+time with Leland  [[02_doc_has.comparative}]]
+
+* mavericks-navigation: provides Jetpack Navigation allowing to
+  create nav graph scoped view models.
+
+* Decoupled from Epoxy. While still the preferred UI, Mavericks 2.0
+  is not tied to it.
+
+# MvRX 1.0 to Mavericks 2 Portability notes
+
+- MvRx 1.0 names like 'subscribe' are now 'onEach' and accept
+  suspending lambdas.
+- When 'onEach' emits a new value, if the previous lambda hasn’t
+  completed, it will be canceled (aka it behaves like mapLatest).
+- 'ViewModel.stateFlow' returns 'Flow<S>'
+- 'ViewModel.awaitState()' suspends and returns S after all pending
+  state updates are run.
+- APIs that returned Disposable now return Job.
+
+# Mavericks TODO [[{01_PM.TODO]]
+
+##  Better Android Testing at Airbnb — Part 1: Philosophy and Mocking
+
+* <https://medium.com/airbnb-engineering/better-android-testing-at-airbnb-3f5b90b9c40a>
+[[01_PM.TODO}]]

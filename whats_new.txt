@@ -1,0 +1,20 @@
+# What's new
+
+## Android 11 2020
+* https://android-developers.googleblog.com/2020/02/Android-11-developer-preview.html
+
+## Android-q 2019
+* <https://www.infoq.com/news/2019/03/android-q-beta>
+- In regard to privacy key improvements:
+  - Scoped storage. new user permissions concerning access to        
+    external storage, media types, and so on, affecting all apps
+    accessing and sharing files in external storage. [[{security.storage}]]
+  - Apps can use their own sandbox to store private files or shared
+    collections for media and downloads, such as Photos, Downloads,...
+  - Device location: Users allowed to restrict geolocation to foreground apps.
+  - Background activities will need to:
+    - display a high-priority notification.
+    - use a full-screen intent (to launch another appa and continue to run)
+  - restricted access to hardware identifiers (MAC, serial number, IMEI,...) [[{privacy}]]
+
+

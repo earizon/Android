@@ -1,0 +1,101 @@
+# JNI (C/Rust/...)
+
+* <https://mhandroid.wordpress.com/2011/01/23/using-eclipse-for-android-cc-development/>
+
+```
+Note: Project->C/C++ General -> Path&Symbols -> Includes:
+  /opt/android-ndk-r9d/platforms/android-19/arch-arm/usr/include
+  /opt/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/linux
+```
+
+* <http://stackoverflow.com/questions/9258451/false-error-from-eclipse-function-android-log-print-could-not-be-resolved>
+* <http://stackoverflow.com/questions/16284199/android-ndk-in-eclipse-type-size-t-could-not-be-resolved>
+* <http://mhandroid.wordpress.com/2011/01/23/using-eclipse-for-android-cc-debugging/>
+
+# Debugging native JNI C/C++ code
+
+* Ref: <http://stackoverflow.com/questions/17705109/how-to-debug-c-c-code-ndk-in-eclipse>
+
+  You can use DS-5 CE Android Debug tool provided by ARM as a plugin 
+to your eclipse.  It works really well and provides a very good and 
+easy UI for debugging. From my personal experience it is lots better 
+than the traditional way of debugging the ndk app.  Please refer the 
+below link which will provide you with the details of how to use the 
+DS-5 debugger.<br/>
+<http://ds.arm.com/developer-resources/tutorials/android-native-app-debug-tutorial/>
+[[{troubleshooting.debugging.DS5}]]
+
+* Enable CheckJNI: (REF: <http://android-developers.blogspot.fr/2011/07/debugging-android-jni-with-checkjni.html>)
+  * If you’re using the emulator, CheckJNI is on by default.
+  * If you’re working with an Android device, use the following adb command:
+    ```
+    adb shell setprop debug.checkjni 1
+    ```
+    CheckJNI can catch all of the following kinds of error:
+    - Arrays: attempting to allocate a negative-sized array.Bad pointers:
+      passing a bad jarray/jclass/jobject/jstring to a JNI call,
+      or  passing a NULL pointer to a JNI call with a non-nullable argument.
+    - Class names: passing anything but the “java/lang/String” style of class name to a JNI call.
+    - Critical calls: making a JNI call between a GetCritical and the corresponding ReleaseCritical.
+    - Direct ByteBuffers: passing bad arguments to NewDirectByteBuffer.
+    - ...
+
+* To execute a native app:
+  ```
+  $ adb shell
+  $ run-as com.mycompany.myapp
+  $ cd /data/data/com.mycompany.myapp/...
+  $ ./bin/myExecutable
+  ```
+
+# strace for Android
+
+* <http://benno.id.au/blog/2007/11/18/android-runtime-strace>
+
+ ... This time we start runtime using strace:
+  ```
+  | ./strace -ff -F -tt -s 200 -o /tmp/strace runtime.
+  |          · · ·· · · └────┴─ show  more detail in any strings that are 
+  |          · · ·· · ·         used. After doing this we also start up zygote.
+  |          · · ·· └─┴─······· prints out time-of-system-calls in microseconds.
+  |          · · └┴─··········· try and follow any vfork()s.
+  |          └─┴─·············· follow fork() and output each forked files
+  |                             trace to a different file.
+  ```
+
+# Debugging with ndk-gdb:
+* <http://stackoverflow.com/questions/8934575/debugging-android-ndk-native-apps>
+
+  I'm trying to debug and step through an Android application that 
+segfaults. I've tried ndk-gdb, but with little luck.  I've tried:
+  ```
+  ndk-gdb --start
+  ```
+  ... Well `NDK_DEBUG=1` and debuggable flag in manifest set to true are
+  required. When you build the app,in your project/libs/armeabi, there
+  should be a gdb.setup file. There is symbol search path there, check
+  whether it is valid. And did you try this:
+
+  ```
+  ndk-gdb --start --verbose --force
+  ```
+  Make sure that you load your native library in either a launchable activity or
+  in your Application class. Otherwise it wouldn't work and you'll get the
+  following error No symbol table is loaded.  Use the "file" command..
+  <br/>
+  For example in Application class:
+
+  ```
+  | import android.app.Application;
+  |
+  | public class MyApp extends Application {
+  |     static { System.loadLibrary("Name"); }
+  |     public static native int doSomething();
+  | }
+  ```
+
+  ... Name is the name of your library (.so file) without the lib part.<br/>
+  I resolved putting `--nowait` option to the shell command:
+  ```
+  ndk-gdb --start --verbose --nowait
+  ```

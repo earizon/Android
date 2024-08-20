@@ -1,0 +1,791 @@
+# TODO/Non-Classified: <!-- { --> 
+
+## https://developer.android.com/kotlin/coroutines [[{01_PM.TODO.now}]]
+
+## Kotlin Flows: [[{PM.TODO}]] <!-- { -->
+* In coroutines, a flow is a type that can emit multiple values 
+  sequentially, as opposed to suspend functions that return only a 
+  single value. For example, you can use a flow to receive live updates 
+  from a database.
+<!-- } -->
+
+
+
+## Modern Android Development (MAD) Skills 
+* <https://developer.android.com/series/mad-skills>
+* a series of videos and articles we’re creating to teach you how to 
+  use the latest technologies of Modern Android Development to create 
+  better applications more easily.
+
+  Arranged as a series of three-week topics, from Navigation to Kotlin
+  to Android Studio, each topic will conclude with a Q&A where we’ll
+  answer your questions.
+
+## Roadmap to become an Android developer
+* <https://roadmap.sh/android>
+
+## Gradle Build Variants 
+* <https://developer.android.com/build/build-variants>
+
+## Annotation Processing with kapt plugin (Use Dagger,... in Kotlin)
+  https://kotlinlang.org/docs/reference/kapt.html
+  Annotation processors (see JSR 269) are supported in Kotlin with the kapt
+  compiler plugin. Being short, you can use libraries such as Dagger or Data
+  Binding in your Kotlin projects.
+
+## Accelerated Kotlin build times with Kotlin Symbol Processing 1.0
+* <https://android-developers.googleblog.com/2021/09/accelerated-kotlin-build-times-with.html?m=1>
+
+
+## Check:
+* https://developer.android.com/studio/write/
+* https://developer.android.com/studio/projects/
+* https://developer.android.com/studio/debug/
+* https://developer.android.com/studio/test/
+* https://developer.android.com/studio/profile/
+* https://developer.android.com/studio/publish/
+
+* https://developer.android.com/training/basics/data-storage/databases.html
+* https://developer.android.com/index.html#
+* https://developer.android.com/develop/index.html
+* https://developer.android.com/guide/components/index.html
+
+## https://github.com/AliAsadi/Android-MVVM-Architecture
+A basic sample android application to understand MVVM in a very simple way.
+
+## CLI Tools: 
+
+* https://developer.android.com/studio/command-line/
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-install.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-reverse.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-shell.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/aapt.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/androguard.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/apktool.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/dexdump.md
+## https://developer.android.com/guide/topics/resources/string-resource
+  https://developer.android.com/guide/topics/permissions/overview
+## TODO:(1) https://www.infoq.com/news/2018/10/android-oboe
+## https://www.infoq.com/news/2018/11/r8-shrinker-android-studio-3.3
+  https://www.infoq.com/news/2019/02/android-studio-3.3
+
+## Dream come true: Android finally using DRM/KMS (2018) [[{]]
+*  Posted in 2018-12-17 by Gustavo Padovan
+- beginning: Android did not really have a graphics stack.
+  .. pushing frames directly to framebuffers.
+- over time: usecases became more and more complex.
+  new graphics stack was necessary.
+- mainline kernel was far from being up to the job, lacking:
+  - Atomic screen updates.
+  - explicit syncronization
+  - support for low power hardware
+  - ...
+  Google designed their own graphic stack:
+  Atomic Display Framework (ADF), forking linux (mainline) kernel.
+- (mainline graphics stack had a number of problems with an
+   outdate API).
+- ~2008: (mainline) Kernel (Atomic) Modeset (KMS)
+- over time: new API required, lead to a situation with
+  different syscalls to update every single buffer on the screen.
+  to update the whole screen: make 2 syscalls (and hope they would
+  all be applied to the display hardware before the next vsync signal
+  to avoid flickering).
+- 2015: Led by Daniel Vetter (Intel), "Atomic Modesetting" on top
+  of KMS with new sycall to update ALL the information to ALL buffers
+  in ALL screens in a single commit transaction:
+  fixing the issues that plagued the
+  Direct Rendering Manager (DRM) Core refactored.
+  Drivers became much easier to write.
+- Explicit Synchronization: (missing piece) avoid screen stalls and
+  lack of knowledge about the current state of a buffer.
+  (Android) ADF introduced sync fences to keep track of buffer state
+  and signal when GPU or Display is done filling or scanning it out.
+  In work led by Collabora, Android Sync Framework was refactored
+  and added to the mainline kernel, and Explicit Synchronization
+  support was coded into DRM Atomic Modeset.
+
+- 2018: Google Pixel 3 Android phone running mainline graphics stack.
+
+- See hardware abstraction layer (HAL) updated info: [[{01_PM.TODO]]
+  https://source.android.com/docs/core/graphics [[}]]
+[[}]]
+
+## Continuous Testing Using the Android Emulator  [[{qa.testing.ci/cd,]]
+* <https://www.infoq.com/news/2019/10/android-emulator-continuous-test/>
+[[qa.testing.ci/cd}]]
+
+## APK MITM tool for HTTPs inspection  
+
+* <https://github.com/shroudedcode/apk-mitm>
+* A CLI application that prepares Android APK files for HTTPS inspection
+
+## Bazel Will Be the New Build System for the Android Open Source Project
+
+* Used to build Android "core" (C/Assembler/..) libraries. It does NOT
+  replace gradle, used for final (Kotlin/Java) apps.
+
+## Common android interview questions
+* <https://www.javacodegeeks.com/2011/08/android-interview-questions-answers.html>
+
+## Cross-Compiling native code reference scripts [[{devops.crosscompile]]
+
+* PRE-SETUP (do once to adjust NDK path)
+  * "tune" configure.common
+  * "tune" CONFIGURE.ANDROID
+  * (CONFIGURE.CUSTOM defined as sym-link pointing to
+     CONFIGURE.ANDROID | CONFIGURE.LINUX | CONFIGURE.WINDOWS, ...)
+
+* For each specific C/C++ package (e.g, libgtk, libx264, ...) create also:
+  ```
+  ✓ configure_custom_arm_android.sh
+  ✓ make_custom_arm_android.sh
+    (Those scripts will vary for each package depending on the
+    different configure and make switches).
+  ```
+
+* Once all the scripts are in place all that needed is to execute in order:
+  ```
+  $ cd ${SOURCES}/package"N"         
+  $ ./configure_custom_arm_android.sh
+  $ ./make_custom_arm_android.sh"    
+
+  $ cat CONFIGURE.ANDROID
+  ┌─────────────────────────────────────────────────────────────────────────────
+  │ export GCC_PREFIX="arm-linux-androideabi"
+  │ export     EXE=""
+  │ export  DLLEXT="so"
+  │ # http://stackoverflow.com/questions/8950988/how-to-port-intel-based-linux-application-to-arm-platform
+  │ # ARM 11: -mtune=arm1136j-s -mfpu=vfp -mfp=vfp -march=armv6
+  │ #         -mfloat-abi=softfp    ← # Android/ARM, armeabi (ARMv5TE soft-float),
+  │ #                                   Android 2.2+ (Froyo)
+  │ # Cortex A8: -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp
+  │ # -Wl,--fix-cortex-a8           ← # Android/ARM, armeabi-v7a (ARMv7 VFP),
+  │                                     Android 4.0+ (ICS)
+  │ # Cortex A9: -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp
+  │ EXTRA_CFLAGS=" -mtune=cortex-a8 -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+  │ # EXTRA_CFLAGS="-mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+  │ PLATFORM="/opt/android-ndk-r9d/platforms/android-3/arch-arm"
+  │
+  │ export   CFLAGS="${CFLAGS}   -DANDROID ${EXTRA_CFLAGS} -I ${PLATFORM}/usr/include -Wl,-ldl"
+  │ export CXXFLAGS="${CXXFLAGS} -DANDROID ${EXTRA_CFLAGS} -I ${PLATFORM}/usr/include -Wl,-ldl"
+  │
+  │ export  LDFLAGS="-L${PLATFORM}/usr/lib"
+  │ export     PATH="${PATH}:/opt/android-ndk-r9d/:/opt/android-ndk-r9d/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86_64/bin"
+  │
+  │ export BINARY_FORMAT="elf"
+  │
+  │ # TODO Adding this CGG flags fixed the crt*o issues in
+  │ # 05_grep-2.20_ONLY_Android
+  │ # Looks a cleaner way thant adding th symb.links
+  │ SYSROOT="/opt/android-ndk-r9d/platforms/android-3/arch-arm/"
+  │ CFLAGS="  ${CFLAGS} --sysroot ${SYSROOT}"
+  │ CxxFLAGS="${CXXFLAGS} --sysroot /opt/android-ndk-r9d/platforms/android-3/arch-arm/"
+  │ BASE="/opt/android-ndk-r9d/platforms/android-3/arch-arm/usr/lib/"
+  └──────────────────────────────────────────────────────────────────
+
+  $ ls -ld CONFIGURE.CUSTOM --→ CONFIGURE.ANDROID
+
+  $ cat make_custom_arm_android.sh
+  ┌──────────────────────────────────────────────────
+  │ #!/bin/bash
+  │
+  │ . configure.common
+  │
+  │ echo "WARM: yasm version must be >=1.2.0"
+  │
+  │ # export PATH=${PATH}:/usr/local/viotech_dev/bin/
+  │
+  │ make -j4 STRIP=  2>&1  | tee ${GCC_PREFIX}_make_custom.log
+  │
+  │ if [ $? != 0 ]; then exit 1 ; fi
+  │
+  │ # For Android copy just the static library
+  │
+  │ ${AR} rc libx264_tmp.a  libx264.a ${SYSROOT}usr/lib/libm.so
+  │ mv libx264_tmp.a  libx264.a
+  │ cp libx264.a ${BUILD}/lib/
+  └--------------------------------------------------
+
+  $ cat configure.common
+  ┌------------------------------------------------------------------------------
+  | set -e
+  |
+  | export SOURCE=/home/MyProject/Package_sources # Base source for all packages.
+  | CONFIGURE_CUSTOM=./CONFIGURE.CUSTOM
+  | if [ ! -L ${CONFIGURE_CUSTOM} ]; then
+  |     # Abort if its not a symbolic link.
+  |     echo "${CONFIGURE_CUSTOM} must be a symbolic link to configure.(i686-w64-mingw32|x686-linux-gnu|...)"
+  |     exit 1;
+  | fi
+  |
+  | . ${CONFIGURE_CUSTOM}
+  |
+  | export LC_ALL=C
+  | export BUILD=${SOURCE}/BUILD_${GCC_PREFIX}
+  | for dirI in bin lib include share ; do
+  |     if [ ! -d ${BUILD}/${dirI} ]; then mkdir -p ${BUILD}/${dirI} ; fi
+  | done
+  |
+  | # If CLEAN_ON_CONFIG not defined them define as yes.
+  | set | grep CLEAN_ON_CONFIG || export CLEAN_ON_CONFIG="yes"
+  | if [ "$CLEAN_ON_CONFIG" != "yes" ] ; then
+  |     echo "Unsetting CLEAN_ON_CONFIG"
+  |     unset CLEAN_ON_CONFIG # this avoid problems with bash conditionals.
+  | fi
+  | echo "CLEAN_ON_CONFIG: ${CLEAN_ON_CONFIG}"
+  |
+  | export      CC="${GCC_PREFIX}-gcc -O0 -g " # TODO:(?) Move -O0 -g to CFLAGS?
+  | export     CXX="${GCC_PREFIX}-g++ -O0 -g "
+  | export      AR="${GCC_PREFIX}-ar"
+  | export      LD="${GCC_PREFIX}-ld"
+  | export      NM="${GCC_PREFIX}-nm"
+  | export OBJCOPY="${GCC_PREFIX}-objcopy"
+  | export OBJDUMP="${GCC_PREFIX}-objdump"
+  | export   STRIP="${GCC_PREFIX}-strip"
+  | export  RANLIB="${GCC_PREFIX}-ranlib"
+  | export PREFIX="${BUILD}"
+  | export LD_LIBRARY_PATH=${BUILD}/lib:/usr/${GCC_PREFIX}/lib
+  | export PKG_CONFIG_PATH=${BUILD}/lib/pkgconfig
+  | export  CFLAGS="${CFLAGS}  -I ${BUILD}/include "
+  | export LDFLAGS="${LDFLAGS} -L${BUILD}/lib -v "
+  | cat << EOF > ${GCC_PREFIX}-pkg-config
+  | #!/bin/bash
+  |
+  | # Ref: http://www.mega-nerd.com/erikd/Blog/CodeHacking/MinGWCross/pkg-config.html
+  | # This file has no copyright assigned and is placed in the Public Domain.
+  | # No warranty is given.
+  |
+  | # When using the mingw32msvc cross compiler tools, the native Linux
+  | # pkg-config executable works fine as long as the default PKG_CONFIG_LIBDIR
+  | # is overridden.
+  | export PKG_CONFIG_LIBDIR=/usr/${GCC_PREFIX}/lib/pkgconfig
+  |
+  | # Also want to override the standard user defined PKG_CONFIG_PATH with
+  | # a mingw32msvc specific one.
+  | ### export PKG_CONFIG_PATH=$PKG_CONFIG_PATH_MINGW32MSVC
+  |
+  | # Now just execute pkg-config with the given command line args.
+  | pkg-config $@
+  | EOF
+  | chmod u+x ${GCC_PREFIX}-pkg-config
+  | PATH=$PATH:.
+  └----------------------------------------------------------------
+
+  $ cat /tmp/scriptExamples/configure_custom_arm_android.sh
+  ┌-------------------------------------------------------------------------------
+  | #!/bin/bash -x
+  | # Use our custom compiled yasm (1.2.0) over debian standard package (yasm 0.8)
+  |
+  | . configure.common
+  |
+  | # export PATH=${PATH}:/usr/local/viotech_dev/bin/
+  |
+  | # --------------------
+  | export CFLAGS="${CFLAGS}     --param=ssp-buffer-size=4 -Wformat "
+  | export CXXFLAGS="${CXXFLAGS} --param=ssp-buffer-size=4 -Wformat "
+  | export CFLAGS="${CFLAGS}     -Werror=format-security"
+  | export CXXFLAGS="${CXXFLAGS} -Werror=format-security"
+  | export CPPFLAGS="${CPPFLAGS} -D_FORTIFY_SOURCE=2"
+  | # export LDFLAGS="${LDFLAGS} -Wl,-Bsymbolic-functions"
+  | export LDFLAGS="${LDFLAGS}"
+  | export LIBS="libm.so"
+  | # --------------------
+  |
+  | if [ ${CLEAN_ON_CONFIG} ] ; then
+  |     make distclean || echo "make clean failed $pwd"
+  | fi
+  |
+  | echo $CFLAGS;
+  | # --disable-asm => Avoid "illegal instruction at runtime"
+  |   ./configure --enable-pic \
+  |         --cross-prefix=${GCC_PREFIX}- \
+  |         --cross-prefix=${GCC_PREFIX}- \
+  |         --host=arm-linux-androideabi  \
+  |         --enable-shared \
+  |         --enable-static \
+  |         --prefix=${PREFIX} 2>&1 | \
+  |       # --disable-asm \
+  |         tee ${GCC_PREFIX}_configure_custom.log
+  └-------------------------------------------------------------------------------
+ ```
+
+[[devops.crosscompile}]]
+
+## APK replaced by Android App Bundle (AAB)
+
+* APK vs AAB: 
+<https://stackoverflow.com/questions/52059339/difference-between-apk-apk-and-app-bundle-aab>
+
+* <https://www.androidauthority.com/android-apks-sunset-1636829/>
+  * Google sunsets the APK format for new Android apps
+  * This is good news for consumers (smaller app sizes) but also bad 
+    news (redistribution will require an extra step).
+
+## The Android Burrito Design Pattern [[{qa.billion_dolar_mistake]]
+
+* <https://dev.to/jmfayard/android-s-billion-dollar-mistake-327b >
+
+* A sad thing about Android is that the official Android samples follow
+  what Israel Ferrer Camacho called the Android Burrito design pattern:
+  just wrap everything into a burrito 🌯 a GodActivity and/or
+  GodFragment that does everything.
+
+  The official camera-samples is a good example of this. Unfortunately
+  I can't show it here since it is larger than my article, but a
+  glimpse at his structure will be enough:
+
+  God kills a kitten every time you suggest to put yet another thing
+  inside the Activity. That's exactly what the official Android
+  documentation and samples do until this day.
+
+  What could go wrong if you follow the Android Burrito design pattern?
+  Crashes
+
+  Activity is a special kind of Context, one filled with landmines
+  ready to explode. The most obvious problem is that because of this
+  complex lifecycle, your Activity can be killed by the system at any
+  point of time. It is much safer to use a Context with a simpler
+  lifecycle like Application.
+  Memory leaks
+
+  Activity is an expensive object that is tied to the entire user
+  interface. It is very easy to fall into the trap to hold on the
+  Activity object. A memory leak follows. In fact it's such a common
+  trap that you will see this error even in classes of the Android SDK
+  itself, either in some crappy Samsung fork or in the Android Open
+  Source Project itself. It is such a common problem that the good guys
+  at square invested time and efforts to detect those problem
+  automatically
+  GitHub logo square / leakcanary
+  A memory leak detection library for Android.
+  LeakCanary 🐤
+
+  A memory leak detection library for Android.
+  square.github.io/leakcanary
+
+  Instant legacy code
+
+  Legacy code is often used as a vague term meaning "code that is so
+  hard to understand that you are afraid to change it". Michael
+  Feathers's classic book: "Working Effectively with Legacy Code" has a
+  more precise and operational definition: any code that is not
+  automically covered by unit tests qualifies as legacy code.
+
+      Any code that follows the Android Burrito design pattern
+  qualifies instantly as legacy code.
+
+  I have always wondered why the official Android documentation puts so
+  much emphasis on instrumented test.
+
+  In my experience, those are hard to write, fundamentally slow - they
+  have to run on Android devices -, and worst of all, they usually
+  tells you very little when they fail.
+
+  I went the exact opposite direction, wrote lots of easy, fast,
+  focused JVM tests and had much better results. In fact, Google's
+  Testing team has a brillant article explaining why end-to-end tests
+  is an apprently good idea that fails in practice:
+
+      Just Say No to more end-to-end test
+
+      Good ideas often fail in practice, and in the world of testing,
+  one pervasive good idea that often fails in practice is a testing
+  strategy built around end-to-end tests.
+
+      [Please read the whole article, it's very good]
+
+      Google Testing Blog: Just Say No to more end-to-end tests
+
+  So instrumented Android tests are not a great idea.
+
+  But honestly, if you put your logic inside the Android components,
+  that's pretty much all you can do.
+
+      The only way to test a burrito is to taste it.
+
+  The Android Burrito design pattern is in retrospect so clearly wrong
+  that it made me curious: where does it come from and how did it
+  survive until today?
+  How did the Android Burrito Design Pattern became a thing?
+  Some Context 📚
+
+  To give you some Context, those are two of the most fundamental
+  building blocks of the Android SDK 1.0:
+
+      android.content.Context provides access to all global information
+  about an application environment. It allows access to
+  application-specific resources and classes, as well as up-calls for
+  application-level operations such as launching activities,
+  broadcasting and receiving intents, etc.
+      android.app.Activity provides the equivalent of a main() function
+  for an app, but supercharged with a lot of features you need in an
+  mobile operating system, most importantly a complex Activity lifecycle
+
+  Activity is Context
+
+  Here is a fatal error that was made in Android 1.0
+
+  package android.app;
+
+  import android.content.Context;
+
+  class Activity extends Context { }
+
+  But first a bit of theory.
+  Inheritance over Composition 🙄
+
+  From your Object Oriented Programming 101 course, you may remember
+  that there are two very different kind of relationships between
+  objects:
+
+      Inheritance: A House IS A Building
+      Composition: A House HAS A Room
+
+  Prefer Composition over Inheritance is a well-known design principle
+  that has been stated in influential books like
+
+      Design Patterns: Elements of Reusable Object-Oriented Software
+  (1994), by Erich Gamma, Richard Helm, Ralph Johnson, and John
+  Vlissides
+      Effective Java by Joshua Bloch
+
+  Android is just another SDK (Software Development Kit), but is there
+  maybe a reason that the principle does no apply here? I know that
+  this is not the case because...
+  Fragment !is Context 🤔
+
+  If you look at androidx.app.Fragment, another building block from the
+  Android SDK that is very similar to Activity but was introduced
+  later, you realize that it does not extend Context. Instead a
+  Fragment HAS A Context.
+
+  So why did the Android team change their mind, albeit silently?
+  Everything needs a Context in Android 📱
+
+  You can and should avoid the Burrito Design Pattern. What you can't
+  escape is that in Android, you need a Context to do basically
+  everything:
+
+  class SomeThirdPartyClass {
+      fun doStuff(contex: Context) = TODO()
+  }
+
+  But even this banal SomeThirdPartyClass class is a landmine waiting
+  to explode.
+
+  Activity IS A Context, so it's easy to pass this@Activity as
+  parameter to doStuff(). But that's the wrong thing to do, you cannot
+  be sure that SomeThirdPartyClass is doing the right thing or that you
+  are doing the right thing. Crashes, memory leaks and un-testability
+  follows.
+  The documentation and samples are still bad today
+
+  I want to point out that I am not talking only about a historical
+  short-sighted decision.
+
+  In 2014, I was a young inexperienced Android developer in a team of
+  young, inexperienced Android developer. We were trying to learn how
+  this things worked, and used the Android documentation and samples as
+  a blueprint. In retrospect, this was a terrible mistake. We ended up
+  with a painful difficult-to-understand, hard-to-test,
+  even-harder-to-modify mess. Not because we didn't follow the "Android
+  best practices", but precisely because we did!
+
+  Fast forward today, and while there have been progress in a number of
+  areas, a large part of the official Android documentation and samples
+  are still poorly written. And it continues to mislead the new
+  generation of inexperienced developers. And as Uncle Bob would tell
+  you, most developers are new since the IT industry double its size
+  every five years.
+
+  I am aware that for a certain school of thought, all of this is fair
+  game. "Those mistakes are stupid, I am a Real Programmer and wouldn't
+  fall for it. And you can't prevent stupid people from being stupid,
+  no?".
+
+  But I'm from the design-for-humans school of thought, so in my
+  opinion when one programmer makes an error, it's the programmer's
+  fault, but when over more than a decade, thousands of programmers do
+  the same error, then it's the designer who didn't do a good job.
+  Ideally, it should be easy to do the right thing, and harder to shoot
+  yourself in the foot.
+
+  So it's time to say clearly that Burrito Activities and Fragments are
+  not acceptable. It's past-time to fix the documentation and samples.
+  "Mistakes were made" 😔
+
+  I do understand that, although they are painful today, those mistakes
+  were made in a given historical context. The Android project had to
+  release something or become irrelevant, it was a different area when
+  smartphones were hugley less powerful than today.
+
+  It's the same story that with JavaScript. Its design was rushed in
+  just ten days, then it was shipped in Netscape Navigator 1.0, and the
+  rest is history.
+
+  It's not that there are no solutions that makes this kind of
+  historical mistakes manageable. Smart people are usually fast at
+  finding solutions once they are painfully aware of the problem. And
+  this is precisely what is so great with a Tony Hoare's ego-less
+  honesty: it instantly raises the awareness that there is a problem to
+  be fixed here. This is what the Android world is lacking today. The
+  official Android documentation still continues to this day to kill
+  kittens with the wonderful Android Burrito Design Pattern.
+
+  Allow me to finish with Tony Hoare's quote:
+
+      This has led to innumerable errors, vulnerabilities, and system
+  crashes, which have probably caused a billion dollars of pain and
+  damage in the last ten years.
+
+  The joy of Kotlin (18 Part Series)
+  1 How Kotlin makes editing your Gradle build less frustrating
+  2 Better dependency management in Android Studio 3.5 with Gradle
+  buildSrcVersions
+  ... 14 more parts...
+  17 How to Write a Command-Line Tool with Kotlin Multiplatform
+  18 GitHub Actions: a New Hope in YAML Programming Wastela
+[[qa.billion_dolar_mistake}]]
+
+## Termux: Linux "workstation" in Android [[{]]
+
+* https://gist.github.com/raveenb/ab3217798c827be889b83b584d70b08b
+* https://m.apkpure.com/termux/com.termux
+* Termux combines powerful terminal emulation with an extensive Linux package collection.
+* Enjoy the bash and zsh shells.
+* Manage files with nnn and edit them with nano, vim or emacs.
+* Access servers over ssh.
+* Develop in C with clang, make and gdb.
+* Use the python console as a pocket calculator.
+* Check out projects with git.
+* Run text-based games with frotz.
+[[}]]
+
+
+## res/values/strings.xml
+
+  ```
+  | <?xml version="1.0" encoding="utf-8"?>
+  | <resources>
+  |   <string name="app_name">My First App</string>
+  |   <string name="edit_message">Enter a message</string>
+  |   <string name="button_send">Send</string>
+  |   <string name="action_settings">Settings</string>
+  |   <string name="title_activity_main">MainActivity</string>
+  | </resources>
+  ```
+
+## Support Library 
+  If you have not used the Support Library before, set up your
+  project to use the v4 library by following the Support Library Setup
+  document. However, you can also include the action bar in your
+  activities by instead using the v7 appcompat library, which is
+  compatible with Android 2.1 (API level 7) and also includes the
+  Fragment APIs.
+  ```
+  "----------------------------------------------
+  | Platform Version |  API Level | VERSION_CODE
+  +------------------+------------+-------------
+  | Android 4.4· · · |· · · 19· · | KITKAT
+  | Android 4.3· · · |· · · 18· · | JELLY_BEAN_MR2
+  | Android 4.2.0-2· |· · · 17· · | JELLY_BEAN_MR1
+  | Android 4.1.0-1· |· · · 16· · | JELLY_BEAN
+  | Android 4.0.3-4· |· · · 15· · | ICE_CREAM_SANDWICH_MR1
+  | Android 4.0.0-2· |· · · 14· · | ICE_CREAM_SANDWICH
+  | Android 3.2· · · |· · · 13· · | HONEYCOMB_MR2
+  | Android 3.1.x· · |· · · 12· · | HONEYCOMB_MR1
+  | Android 3.0.x· · |· · · 11· · | HONEYCOMB
+  | Android 2.3.3-4· |· · · 10· · | GINGERBREAD_MR1
+  | Android 2.3.0-3· |· · · ·9· · | GINGERBREAD
+  | Android 2.2.x· · |· · · ·8· · | FROYO
+  | Android 2.1.x· · |· · · ·7· · | ECLAIR_MR1
+  | Android 2.0.1· · |· · · ·6· · | ECLAIR_0_1
+  | Android 2.0· · · |· · · ·5· · | ECLAIR
+  | Android 1.6· · · |· · · ·4· · | DONUT
+  | Android 1.5· · · |· · · ·3· · | CUPCAKE
+  | Android 1.1· · · |· · · ·2· · | BASE_1_1
+  | Android 1.0· · · |· · · ·1· · | BASE
+  +------------------+------------+-------------
+  ```
+
+## bionic: Slimmed down version of standard C libc.so in Android
+
+
+## Ignition
+* <https://github.com/mttkay/ignition>
+
+* Ignition helps you getting your Android applications off
+  the ground quickly
+* Areas covered:
+  - ...A class to load remote images off the web and cache them
+  - A simple yet effective caching framework (caches to memory
+    and disk, anything from HTTP responses to entire object trees)
+  - Several helper classes for easier API level backwards 
+    compatibility, Intents, diagnostics, and more
+  - A friendlier and more robust implementation of AsyncTask
+
+## Where are Android Apps installed in the filesystem?
+
+* REF: <http://android.stackexchange.com/questions/3002/where-in-the-file-system-are-applications-installed>
+* System apps / pre-installed-bloatware-apps are stored in /system/app
+  (which is mounted read-only to prevent any changes)
+* normal apps in internal memory go to /data/app
+  some apps (encrypted on internal storage?) go to /data/app-private
+* Apps stored on external memory go to an encrypted container in
+  /mnt/sdcard/.android_secure. As at runtime Android needs them to be decrypted,
+  it will decrypt them and store a decrypted copy on tmpfs (so it's gone on
+  a reboot) in /mnt/asec
+
+...(you cannot simply look into /mnt/sdcard/.android_secure  directly from the
+device; but if you use a card reader and attach the  card to your PC, you will
+see the files there have the extension .asec instead of .apk -- from which you will
+get the connection to the name /mnt/asec).the apps data are stored below
+/data/data/<package_name> (internal storage) or on external storage, if the
+developer sticks to the rules, below /mnt/sdcard/Android/data/<package_name>.
+
+
+## KVM Acceleration Notes
+
+* <https://help.ubuntu.com/community/KVM/Installation#Add_Users_to_Groups>
+
+  ```
+  # $ sudo apt-get install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils
+  # # Now add users permissions ...
+  # $ sudo adduser MyDevUser libvirtd
+  # $ sudo adduser MyDevUser kvm
+  ```
+
+## Emulator for Linux VM
+
+* <http://developer.android.com/tools/devices/emulator.html#vm-linux>
+
+...  To run an x86-based emulator with VM acceleration:If you are running
+  the emulator from the command line, start the emulator with an
+  x86-based AVD and include the KVM options:
+
+  ```
+  | ~$ ~/Android/Sdk/tools/emulator \
+  |  -avd Nexus_5_API_21 -qemu -m 512 -enable-kvm
+  |  (AVD images are kept in ~/.android/avd/*avd)
+  ```
+
+* Note: You must provide an x86-based AVD configuration name, otherwise
+   VM acceleration will not be enabled.
+
+* If you are running the emulator from Android Studio, run your
+  Android application with an x86-based AVD and include the KVM
+  options: In Android Studio, click your Android module folder and then
+  select Run > Edit Configurations...<br/>
+  In the left panel of the Run/Debug  Configurations dialog, select your
+  Android run configuration or create a new configuration.<br/>
+    Under the Target Device options, select the x86-based AVD you
+  created previously. In the Emulator tab, In the Additional command
+  line options field, enter:
+  ```
+   -qemu -m 512 -enable-kvm
+  ```
+  Run your Android project using this run configuration.<br/>
+  <br/>
+   Important: When using the -qemu command line option, make sure it
+  is the last parameter in your command. All subsequent options are
+  interpreted as qemu-specific parameters."
+
+## Publishing Apps
+
+* console:   <https://play.google.com/apps/publish/>
+* signup:    <https://play.google.com/apps/publish/signup/>
+* Checklist: <https://developer.android.com/distribute/googleplay/publish/preparing.html>
+
+* <http://developer.android.com/distribute/googleplay/publish/index.html>
+* <http://developer.android.com/distribute/googleplay/promote/linking.html>
+
+* Google Wallet Merchant Center: <https://wallet.google.com/merchant>
+* <http://developer.android.com/google/play/filters.html>
+* <http://developer.android.com/tools/publishing/app-signing.html#signing-manually>
+  !!!KEEP YOUR KEYSTORE IN SAFE-AND-SECURE PLACE!!!
+* Generate a private key using keytool:
+  ```
+   PROJECT_NAME="mentalclock2"
+   NON_SIGNED_RELEASE_APK="bin/${PROJECT_NAME}-release.apk" # Compiled apk in release mode (unsigned)
+   SIGNED_RELEASE_APK="bin/${PROJECT_NAME}-unaligned.apk"   # TODO:(0) check
+   SIGNED_ALIGNED_APK="bin/${PROJECT_NAME}.apk"             # TODO:(0) check
+   KEYSTORE_FILE="com.oficina24x7-android-release-key.keystore"
+   KEY_ALIAS="ANDROID_SIGNATURE"
+   DAY_VALID=10000
+   # next line prompts for passwords for the keystore and key, and to provide the Distinguished Name fields for your key.
+   # It then generates the keystore as a file called ${KEYSTORE_FILE}.
+   # The keystore contains a single key, valid for 10000 days.
+   # The alias is a name that you will use later when signing your app.
+   keytool -genkey -v -keystore ${KEYSTORE_FILE} -alias ${KEY_ALIAS} -keyalg RSA -keysize 2048 -validity ${DAY_VALID}
+
+   # Sign NOW the apk using the private key:
+   $ jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ${KEYSTORE_FILE} ${NON_SIGNED_RELEASE_APK} ${KEY_ALIAS}
+
+
+   # Verify that your APK is signed:
+   $ jarsigner -verify -verbose -certs ${SIGNED_RELEASE_APK}
+
+   # Align the final APK:
+   $ zipalign -v 4 ${SIGNED_RELEASE_APK} your_project_name.apk
+   #
+   # ensures that all uncompressed data starts with a particular byte 
+   # alignment relative to the start of the file
+   # which reduces the amount of RAM consumed by an app
+  ```
+
+## Stetho Debugging (by Facebook):
+
+* Stetho is a sophisticated debug bridge for Android applications. 
+  When enabled, developers have access to the Chrome Developer Tools 
+  feature natively part of the Chrome desktop browser. Developers can 
+  also choose to enable the optional dumpapp tool which offers a 
+  powerful command-line interface to application internals.
+
+## Email settings
+* See 
+  <https://www.cyberciti.biz/mobile-devices/android/how-to-push-send-message-to-ios-and-android-from-linux-cli/>
+  ```
+  |$ source ~/bin/cli_app.sh
+  |$ push_to_mobile "$0" "$_sub. See $_to email for detailed log. -- $HOSTNAME " >/dev/null
+  ```
+
+## scrcpy: mirror Android (video+audio) via USB|TCP-IP on Linux/Windows/macOS
+
+* <https://github.com/Genymobile/scrcpy>
+
+* Mirrors Android devices (video and audio) connected via USB or
+  over TCP/IP, and allows to control the device with the keyboard
+  and the mouse of the computer. 
+* It does NOT require any root access.
+
+## SimpleAndroidMVVM Tutorial
+* Proyecto de ejemplo con Clean Architecture, MVVM, Retrofit, 
+  Corrutinas, Dagger Hilt y mucho más acompañado de tutoriales por 
+  escritos y en vídeo.
+* <https://github.com/ArisGuimera/SimpleAndroidMVVM>
+
+## Others:
+
+* LiveData, Coroutine, Flow
+* Jetpack Compose
+
+## Dependency injection: Dagger2 vs Koin vs Hilt vs ...
+* TODO
+
+## HTTP Libs: Retrofit vs Volley vs ...
+
+## Resources Layout
+  ```
+  | res/$ressource_type/[<-quantificateur 1><-quantificateur 2>...<-quantificateur N>]
+  |     └─────────────┴── drawable layout menu draw values
+  |
+  | Priotiry  2: language. Ex: en, fr, fr-rFR
+  | Priotiry  3: size: small, normal, large, xlarge
+  | Priotiry  5: Screen orientation: port, land
+  | Priotiry  8: Screen Resolution: ldpi (~120dpi), mdpi (~160dpi), hdpi (~240dpi), xhdpi (~320dpi), nodpi (don't resize)
+  | Priotiry 14: API level (v3, v5, v7, ...)
+  ```
+
+
+<!-- } -->

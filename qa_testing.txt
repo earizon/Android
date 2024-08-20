@@ -1,0 +1,24 @@
+# Testing [[{]]
+
+  • http://developer.android.com/tools/help/monkeyrunner_concepts.html
+    http://developer.android.com/tools/help/monkey.html
+    The Monkey is a program that runs on your emulator/device and generates pseudo-random
+    streams of user events such as clicks, touches, or gestures, as well as a number of system-level
+    events.  You can use the Monkey to stress-test applications that you are developing, in a random
+    yet repeatable manner.
+
+  • https://github.com/wlach/orangutan
+    Orangutan is a replacement for Android's monkey/monkeyrunner tool,intended to
+    overcome the following limitations:
+    Lack of ability to realistically simulate input events: it is
+    difficult to impossible to accurately simulate touch events in terms
+    of downtime and event time. The TCP/IP protocol does not currently
+    set the down time for events correctly, which can result in swipes
+    being misinterpreted as long presses. Running a monkey script these
+    values are set automatically, but not in a way that all applications
+    can understand: for example, Google Chrome for Android totally
+    ignores a monkey-generated drag event.Difficult to impossible to fix
+    bugs. Theoretically it may be possible to submit patches upstream,
+    but good luck getting a patched version of monkeyrunner on a device
+    running Android 2.x.
+[[}]]

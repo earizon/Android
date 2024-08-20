@@ -1,0 +1,196 @@
+# Persistence
+
+## Saving Key-Value Sets (SharedPreferences API)
+* WARN: Do not confuse with the (settings) Preferences API
+* getSharedPreferences(): Use this if you need multiple shared preference files identified
+  by name. You can call this from any Context in your app.
+* getPreferences() — Use this from within an Activity. It will 
+retrieve the default shared preference file for the activity.
+
+* Inside a fragment:
+  ```
+  Context context = getActivity();
+  SharedPreferences sharedPref = context.getSharedPreferences(
+          getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+  ```
+* Inside an activity:
+  ```
+  SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);"
+  ```
+* CAUTION: If you create a shared preferences file with MODE_WORLD_READABLE or 
+  MODE_WORLD_WRITEABLE, then any other apps that know the file identifier can 
+  access your data.
+
+## Writing/Modifying a value
+  ```
+  SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+  SharedPreferences.Editor editor = sharedPref.edit();
+  editor.putInt(getString(R.string.saved_high_score), newHighScore); //:= putString()
+  editor.commit();"
+  "Default values:
+  int defVal = getResources().getInteger(R.string.saved_high_score_default);
+  long highScore = getPreferences(Context.MODE_PRIVATE).getInt(key, defVal);"
+  ```
+
+## Saving Files (File API)
+* Internal storage is best when you want to be sure that neither the 
+  user nor other apps can access your files.
+* Tip: Although apps are installed onto the internal storage by 
+  default, you can specify the android:installLocation attribute in 
+  your manifest so your app may be installed on external storage.
+* Edit the manifest to allow external storage access:
+  ```
+  | <manifest ...>
+  | <uses-permission 
+  |   android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  ```
+  Note: READ_EXTERNAL_STORAGE suffice for reading/not-writing
+* getFilesDir() Returns a File representing an internal directory for your app.
+* getCacheDir()Returns a File representing an internal directory for your app's temporary.
+* cache files. Be sure to delete each file once it is no longer 
+  needed. Cached files can be deleted without warning on low space.
+  ```
+  | File file = new File(context.getFilesDir(), filename);
+  |    try {
+  | FileOutputStream outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+  | outputStream.write("Hello world!".getBytes());
+  | outputStream.close();
+  |    } catch (Exception e) { ...}
+  |    try {
+  | String fileName = Uri.parse(url).getLastPathSegment();
+  | return File.createTempFile(fileName, null, context.getCacheDir());
+  | ...
+  |    } catch (Exception e) { ...}
+  | (cached files must be removed manually. On low space Android will remove them auto. too)"
+  | String state = Environment.getExternalStorageState();
+  | Environment.MEDIA_MOUNTED.equals(state); // <- true => read&write
+  | Environment.MEDIA_MOUNTED_READ_ONLY.equals(state) // <- ture => read
+  |
+  | getExternalStoragePublicDirectory() -> Shared dir with other apps.
+  ```
+* Ex:
+  ```
+  | File file = new File(Environment.getExternalStoragePublicDirectory(
+  | · · Environment.DIRECTORY_PICTURES), albumName); // := DIRECTORY_MUSIC, ..._RINGTONES, ...
+  | if (!file.mkdirs()) { Log.e(LOG_TAG, "Directory not created"); }"
+  | getExternalFilesDir() -> External but not shared (will be deleted on App removal)
+  | myFile.delete(); or
+  | myContext.deleteFile(fileName);
+  ```
+
+   you should manually delete all cached files created with getCacheDir()
+
+## SQL DDBBs (android.database.sqlite)
+* You may find it helpful to create a companion class, known as a 
+  contract class, which explicitly specifies the layout of your schema 
+  in a systematic and self-documenting way.
+* A contract class is a container for constants that define names for 
+  URIs, tables, and columns. The contract class allows you to use the 
+  same constants across all the other classes in the same package. This 
+  lets you change a column name in one place and have it propagate 
+  throughout your code.
+  ```
+  public final class FeedReaderContract {
+    public FeedReaderContract() {} // empty constructor=>Prevent accidental instantiation
+    
+    public static abstract class FeedEntry implements BaseColumns {
+      public static final String TABLE_NAME = "entry";
+      public static final String COLUMN_NAME_ENTRY_ID = "entryid";
+      public static final String COLUMN_NAME_TITLE = "title";
+      public static final String COLUMN_NAME_SUBTITLE = "subtitle";
+      ...
+    }
+
+    private static final String TEXT_TYPE = " TEXT";
+    private static final String COMMA_SEP = ",";
+    private static final String SQL_CREATE_ENTRIES =
+        "CREATE TABLE " + FeedEntry.TABLE_NAME + " (" +
+        FeedEntry._ID + " INTEGER PRIMARY KEY," +
+        FeedEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + COMMA_SEP +
+        FeedEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
+        ... // Any other options for the CREATE command
+        " )";
+    private static final String SQL_DELETE_ENTRIES =
+        "DROP TABLE IF EXISTS " + FeedEntry.TABLE_NAME;"
+
+  }
+  ```
+*  A useful set of APIs is available in the SQLiteOpenHelper class.
+    When you use this class to obtain references to your database, the 
+  system performs the potentially  long-running operations of creating 
+  and updating the database only when needed and not during app 
+  startup. All you need to do is call  getWritableDatabase() or 
+  getReadableDatabase().
+* Because they can be long-running, be sure that you call 
+  getWritableDatabase() or getReadableDatabase() in a background 
+  thread, such as with AsyncTask or IntentService."
+* To use SQLiteOpenHelper, create a subclass that overrides the 
+  onCreate(), onUpgrade() and onOpen() callback methods. You may also 
+  want to implement onDowngrade(), but it's not required.
+
+  ```
+  public class FeedReaderDbHelper extends android.database.sqlite.SQLiteOpenHelper {
+    // If you change the database schema, you must increment the database version.
+    public static final int DATABASE_VERSION = 1;
+    public static final String DATABASE_NAME = "FeedReader.db";
+  
+    public FeedReaderDbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(SQL_CREATE_ENTRIES);
+    }
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // This database is only a cache for online data, so its upgrade policy is
+        // to simply to discard the data and start over
+        db.execSQL(SQL_DELETE_ENTRIES);
+        onCreate(db);
+    }
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
+    }
+  }
+  FeedReaderDbHelper mDbHelper = new FeedReaderDbHelper(getContext());
+  ```
+
+## WRITE
+  ```
+  SQLiteDatabase db = mDbHelper.getWritableDatabase(); //write mode
+  ContentValues values = new ContentValues();
+  values.put(FeedEntry.COLUMN_NAME_ENTRY_ID, id);
+  values.put(FeedEntry.COLUMN_NAME_TITLE, title);
+  values.put(FeedEntry.COLUMN_NAME_CONTENT, content);
+  long newRowId = db.insert(FeedEntry.TABLE_NAME,FeedEntry.COLUMN_NAME_NULLABLE,values);
+  ```
+
+## READ
+  ```
+  SQLiteDatabase db = mDbHelper.getReadableDatabase();
+  String[] projection =
+    {FeedEntry._ID, FeedEntry.COLUMN_NAME_TITLE, FeedEntry.COLUMN_NAME_UPDATED,  ...};
+  String sortOrder = FeedEntry.COLUMN_NAME_UPDATED + " DESC";
+  Cursor c = db.query(
+    FeedEntry.TABLE_NAME, projection /*select*/,selection /*where*/,
+    selectionArgs /*where values*/, null /*don't group*/, null /*don't filter*/, sortOrder);
+
+  cursor.moveToFirst();
+  long itemId = cursor.getLong(cursor.getColumnIndexOrThrow(FeedEntry._ID));"
+  ```
+
+## DELETE
+  ```
+  String selection = FeedEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
+  String[] selectionArgs = { String.valueOf(rowId) };
+  db.delete(table_name, selection, selectionArgs);"
+  ```
+
+## UPDATE
+  ```
+  SQLiteDatabase db = mDbHelper.getReadableDatabase();
+  ContentValues values = new ContentValues();
+  values.put(FeedEntry.COLUMN_NAME_TITLE, title);
+  String selection = FeedEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
+  String[] selectionArgs = { String.valueOf(rowId) };
+  int count = db.update(FeedReaderDbHelper.FeedEntry.TABLE_NAME,
+      values, selection, selectionArgs);"
+  ```

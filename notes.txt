@@ -1,0 +1,482 @@
+# External Links:
+
+* <https://developer.android.com/guide/>
+* <https://developer.android.com/reference/packages>
+* <https://developer.android.com/studio/build/> Configure your build
+* <http://francisshanahan.com/index.php/2011/android-development-cheatsheet/>
+
+# Android Development 101
+
+* In Android Mobiles , developer options are hidden by default (4.2+).
+  To enable:
+  ```
+  Settings > About phone -> tap Build number seven times.
+  ```
+  Return to the previous screen to find Developer options.
+
+* <https://developer.android.com/guide/components/fundamentals>
+  <!-- { --> 
+  ```
+  | app "==" component list:
+  | │        - 1+ Activity == Context + UI
+  | │        - 1+ Broadcast receivers
+  | │        - 1+ Services
+  | ├─ res/layout/activity_main.xml  
+  | │  (See <https://developer.android.com/studio/write/layout-editor> )
+  | │  e.g.:
+  | │  <?xml version="1.0" encoding="utf-8"?>
+  | │  <LinearLayout
+  | │    xmlns:android="http://schemas.android.com/apk/res/android"
+  | │      xmlns:tools="http://schemas.android.com/tools"
+  | │      android:layout_width="match_parent"
+  | │      android:layout_height="match_parent"
+  | │      android:orientation="horizontal" >
+  | │    <EditText android:id="@+id/edit_message"
+  | │      android:layout_width="wrap_content"   <··· :=  fill_parent|match_parent|wrap_content
+  | │                                                 ·     (use 0dp if layout_weight defined, with
+  | │      android:layout_height="wrap_content"  <··┘     layout_weight := 1,2,...
+  | │      android:hint="@string/edit_message" />
+  | │    <Button
+  | │        android:layout_width="wrap_content"
+  | │        android:layout_height="wrap_content"
+  | │        android:text="@string/button_send"
+  | │        android:onClick="sendMessage" />
+  | │  </LinearLayout>
+  | │
+  | ├─ res/values/strings.xml
+  | ├─ manifests/AndroidManifest.xml   
+  | │  (<https://developer.android.com/guide/topics/manifest/manifest-intro>)
+  | │   <application ... >
+  | │     <activity android:name=".MainActivity"
+  | │        android:label="@string/app_name">
+  | │       <intent-filter>      <·· The main activity must include <intent-filter>
+  | │         <action                with action: MAIN, category: LAUNCHER
+  | │           android:name="android.intent.action.MAIN" />
+  | │         <category
+  | │           android:name="android.intent.category.LAUNCHER" />
+  | │        </intent-filter>
+  | │     </activity>
+  | │   </application>
+  | │
+  | ├─ java/com.....myapp/MainActivity <··· Child of android.app.Activity
+  | │                                      ├── ViewGroup
+  | ├─ build.gradle    ←  (2 similar files actualy, one for project, one for the "app" module)
+  | └─ gradle.properties     
+  |    └─────┬─────────┘
+  |     customize Android settings. Ex:
+  |     (<https://dev.to/jmfayard/configuring-gradle-with-gradle-properties-211k>)
+  |     studio.projectview=true
+  |     android.enableJetifier=true          ¹
+  |     android.useAndroidX=true      
+  |                                   
+  |     android.databinding.incremental=true ²
+  |     android.enableSeparateAnnotationProcessing=true ³
+  | 
+  |     android.enableR8.fullMode=true    <··· Other Android flags
+  |     android.enableR8.libraries = true
+  |     android.enableR8 = true
+  |     android.debug.obsoleteApi=true
+  |     android.enableBuildCache=true
+  |     android.enableGradleWorkers=true
+  |     android.useMinimalKeepRules=true
+  | 
+  |     ¹ """ If you think, like me, that 'Android view' is
+  |           worse in every respect than 'Project view' """
+  |           (REF: <https://developer.android.com/jetpack/androidx>)
+  |     ² REF: https://developer.android.com/topic/libraries/data-binding/start
+  |     ³ REF: https://developer.android.com/studio/build/optimize-your-build
+  ```
+<!-- } -->
+
+# android.app.Activity [[{]]
+- "presenter" of single-screen in app,
+  display views,menus,alerts,notifications,....
+- It can also call another Activity, (open a new screen).
+- An application needs to have at least one Activity.
+- All Activities must be declared in the manifest file.
+- ACTIVITY LIFECICLE:<br/>
+  **CAUTION:** activity will be destroyed+recreated each time
+  the user rotates the screen because the screen config.
+  has changed and the activity might need to load alternative
+  resources (such as the layout)
+  ```
+  |                 ┌─────────┐            
+  |             ┌──>│Resumend │──┐         
+  |             │   │(visible)│  │         
+  |             │   └─────────┘  │
+  |     onResume()       ^       onPause() ¹                       
+  |             ^        │       │                                 
+  |             │    onResume()  v                                 
+  |         ┌───┴─────┐  │    ┌──┴───────┐                         
+  |     ┌──>│Started  │  └────┤ Paused   │                         
+  |     │   │(visible)│       │(partially├───┐        ┌─────────┐  
+  |     │   └─────────┘       │ visible) │   │  ¹     │Destroyed│  
+  |   onStart()               └──────────┘  onStop()  │(hidden) │  
+  |     │                                    │        └─────────┘  
+  |  ┌──┴─────┐                         ┌────v───┐         ^       
+  |  │Stopped │                         │ Stopped│         │       
+  |  │(hidden)│<─── onCreate(           │(hidden)│──> onDestroy() ²
+  |  └────────┘      savedState:Bundle) └────────┘
+  |                  └······─┬─·····─┘    
+  |       Even if system destroys the activity when in 'Stopped' state,
+  |       the state of the view objects is retained in a android.os.Bundle
+  |       (blob of key-value pairs) and restored when the user
+  |       navigates back to the same instance of the activity.
+  |       WARN: each view must have a unique android:id attribute 
+  |       to work properly.
+  | 
+  |  ¹ WARN: CPU-intensive work (writing to DDBB,...) must be done at
+  |    onStop(). Doing it @ onPause() can slow the visible 
+  |    transition to the next activity
+  | 
+  |   ² onDestroy() is rarely used:
+  |     most cleanup must be done @ onPause() and onStop().
+  |     Only when using background threads created in onCreate()
+  |     or other long-running resources that could potentially
+  |     leak memory should kill them during onDestroy(). Ej:
+  |    
+  |     override onDestroy() {
+  |       super.onDestroy();  // Always call the superclass
+  |       ...
+  |       // Stop method tracing started @ onCreate()
+  |       android.os.Debug.stopMethodTracing();
+  |     }
+  ```
+
+* MainActivity.kt Example:
+  ```
+  | import android.content.Intent               // <·· Communicate with other apps.
+  | import android.support.v7.app.AppCompatActivity
+  | import android.os.Bundle
+  | import android.view.View                    // <·· Single UI element handling user-events,
+  | import android.widget.EditText              //     it draws the component on the screen. 
+  |                                             //     View groups are views containing other views.
+  |                                             //     Many pre-existing views that can be reused.
+  | const val KEY_EXTRA_MESSAGE = "com.myapp.MESSAGE"
+  |
+  | class MainActivity : AppCompatActivity() {
+  |   override fun onCreate(savedInstanceState: Bundle?) {
+  |     super.onCreate(savedInstanceState);
+  |     if (savedInstanceState != null) { // Restore members
+  |         mCurrentScore = savedInstanceState.getInt(STATE_SCORE);
+  |         ....
+  |     }
+  |     setContentView(R.layout.activity_main);
+  |     val textView = new TextView(this); // Create the text view
+  |         textView.setTextSize(40);
+  |         textView.setText(R.string.hello_world);  // <·· Use type-safe resource.
+  |
+  |     setContentView(textView); // Set text view as the activity layout
+  |     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+  |         getActionBar().setDisplayHomeAsUpEnabled(true);
+  |     }
+  |   }
+  | 
+  |   override onSaveInstanceState(savedInstanceState: Bundle ) {
+  |       savedInstanceState.putInt(STATE_SCORE, mCurrentScore);
+  |       ...
+  |       super.onSaveInstanceState(savedInstanceState); // Mandatory
+  |   }
+  | 
+  |   override fun onOptionsItemSelected(MenuItem item) : boolean {
+  |     if (item.getItemId()) {
+  |       case android.R.id.home:
+  |           NavUtils.navigateUpFromSameTask(this);
+  |           return true;
+  |     }
+  |     return super.onOptionsItemSelected(item);
+  |   }
+  | 
+  |   /** Called when the user taps the Send button */
+  |   fun sendMessage(view: android.view.View) {
+  |       val editText = findViewById<EditText>(R.id.editText)
+  |       val message = editText.text.toString()
+  |       val intent    = new Intent(this, DisplayMessageActivity.class);
+  |       intent.putExtra(EXTRA_MESSAGE, message);
+  |       startActivity(intent);
+  |   }
+
+  | }
+  ```
+
+[[}]]
+
+# BroadcastReceiver (subclasses)  [[{]]
+- broadcast receiver: allows component to receive events (Intent objects in practice)
+  and respond from other apps and system-wide broadcast announcements.
+- They are a  well-defined entry into the app, allowing to event start the app
+  if not yet running. eg:
+  - scheduled alarm post a notification warning user about an upcoming date,
+    and the alarm-event is received by another app's  BroadcastReceiver.
+  - Example system-wide broadcast events can be:
+    - screen turned off.
+    - battery is low.
+    - picture was captured.
+  - Example apps broadcasts initiated by apps:
+    - let other apps know that some data has been downloaded/available to use.
+  - broadcast receivers can craete a status bar to feedback/alert users even when
+    they don't display a user interface.
+    MORE COMMONLY, A BROADCAST RECEIVER IS JUST A GATEWAY TO OTHER COMPONENTS
+    AND IS INTENDED TO DO A VERY MINIMAL AMOUNT OF WORK (e.g: schedule a JobService
+    to perform some work based on the event with JobScheduler)
+[[}]]
+
+# android.app.Service [[{]]
+- Application running in background.
+- All Services must be declared in the manifest file.
+[[}]]
+
+# android.content.Intent [[{]]
+- negotiator between two activities or apps.
+- Provides the ability to pass messages&data between the two entities.
+  ```
+  | // ---- INTENT SENDER --------------
+  | class MainActivity : AppCompatActivity() {           
+  |   ...                                                
+  |   fun sendMessage(view: View) {                      
+  |     ...                                              
+  |     val intent = Intent(                             
+  |       this /* context */,                            
+  |       DisplayMessageRecieverActivity::class
+  |     //└··receiver app─comp.─class········─┘          
+  |     ).apply { // Add any extra key-value/s
+  |       putExtra("com.myapp.MSG1"/*key*/,              
+  |                text_message /*val*/)                 
+  |     }                                                
+  |     startActivity(intent)                            
+  |   }                                                  
+  |   ...                                                
+  | }                                                    
+  ```
+
+  ```
+  | // ------ INTENT RECEIVER ------------
+  | class myActivity /*receiver*/: ... {
+  |   ...
+  |   override
+  |   fun onCreate(savedInstanceState: Bundle?) {
+  |     super.onCreate(savedInstanceState)
+  |     setContentView(R.layout.activity_display_message)
+  |                                                           
+  |     val message = intent.getStringExtra("com.myapp.MSG1")
+  |                                                           
+  |     val textView = findViewById<TextView>
+  |       (R.id.textView).apply {
+  |         text = message
+  |     }
+  |   }
+  |   ...
+  | }
+  ```
+
+
+  ```
+  | // ------ Getting a result from Intent ------
+  | static final int PICK_CONTACT_REQUEST = 1;  // The request code
+  |
+  | @Override
+  | protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+  |   if (requestCode == PICK_CONTACT_REQUEST && resultCode == RESULT_OK) {...}
+  | ...
+  | private void pickContact() {
+  |   Intent pickContactIntent = 
+  |     new Intent(Intent.ACTION_PICK, Uri.parse("content://contacts"));
+  |   pickContactIntent.setType(Phone.CONTENT_TYPE);
+  |   startActivityForResult(pickContactIntent, PICK_CONTACT_REQUEST);
+  | }
+  ```
+
+
+## Calling a phone number
+  ```
+  | val number = Uri.parse("tel:5551234");
+  | val callIntent = new Intent(Intent.ACTION_DIAL, number);
+  ```
+
+## View a map
+  ```
+  | val location0 = Uri.parse("geo:0,0?q=1600+Parkway,+London,"); 
+  | //         or   Uri.parse("geo:37.422219,-122.08364?z=14");
+  | Intent mapIntent = new Intent(Intent.ACTION_VIEW, location);"
+  ```
+
+## Open a webpage
+  ```
+  val webpage = Uri.parse("http://www.android.com");
+  Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
+  ```
+
+## Send email
+  ```
+  Intent emailIntent = new Intent(Intent.ACTION_SEND);
+  emailIntent.setType(HTTP.PLAIN_TEXT_TYPE); // No URI => set "text/plain" MIME type
+  emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"jon@example.com"}); // recipients
+  emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Email subject");
+  emailIntent.putExtra(Intent.EXTRA_TEXT, "Email message text");
+  emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("content://path/to/email/attachment"));
+  // You can also attach multiple items by passing an ArrayList of Uris"
+  ```
+
+* Caution: Apps will crash If no app is available to handle the intent.
+  Test:
+  ```
+  PackageManager packageManager = getPackageManager();
+  List<ResolveInfo> activities = packageManager.queryIntentActivities(intent, 0);
+  boolean isIntentSafe = activities.size() > 0;
+  ```
+
+[[}]]
+
+# Resource manager [[{]]
+* <https://developer.android.com/studio/write/resource-manager>
+* Resource manager: tool to import/create/manage/use resources
+  ```
+  Menu > View > Tool Windows > Resource Manager
+
+  table lists: supported densities represented for Android and iOS:
+  DENSITY 	                ANDROID             IOS
+          	                DENSITY QUALIFIER  SCALING FACTOR
+          	                ─────────────────  ──────────────
+  Low-density                    (~120 dpi)   ldpi   not supported
+  Medium-density                 (~160 dpi)   mdpi   original scale
+  High-density                   (~240 dpi)   hdpi   not supported
+  Extra-high-density             (~320 dpi)  xhdpi   @2x
+  Extra-extra-high-density       (~480 dpi) xxhdpi   @3x
+  Extra-extra-extra-high-density (~640 dpi)xxxhdpi   @4x
+                                           └──┬──┘
+                                              └─┬──┐
+         $project/$module/src/main/res/drawable-hdpi/XXX.png
+  ```
+[[}]]
+
+# ContentProvider (subclasses)  [[{persistence,]]
+
+- content provider: manages a SHARED-SET-OF-APP-DATA (to be persisted in FS/SQLite/...)
+  Other apps can query or modify the data when allowed.<br/>
+    E.g: Android-system provides a content provider to manage user's contact information.
+  Any app with permissions can read and/or write ContactsContract.Data.
+  - tempting to think of them as (an abstraction of) a database,<br/>
+    Key-difference:
+      TO THE ANDROID SYSTEM, A CONTENT-PROVIDER IS AN ENTRY POINT INTO
+    AN APP FOR PUBLISHING NAMED DATA ITEMS, IDENTIFIED BY A URI SCHEME.<br/>
+    - app can decide how to map 'data' <-> 'URI namespace'.
+    - share URIs with other entities to gran access the data.
+    The Android System can then:
+    - Once the URI has been assigned (and persisted), the app doesn't
+      need to remain running, only when access to data is needed it will.
+    - URIs allows for fine-grained security model: [[{security]]
+      - Example: an app places the URI for an image it has on the clipboard,
+                 but leave its content provider locked up so that other apps
+                 cannot freely access it.
+                 When a second app attempts to access that URI on the clipboard,
+                 the system can allow that app to access the data via a temporary
+                 URI permission grant but nothing else. [[}]]
+- Content providers are also useful for reading/writing data private
+  to the app (and not shared).the Note-Pad sample-app uses it to save notes.
+[[}]]
+
+# Enable "go-back" navigation [[{]]
+
+* (return to logical "parent" screen)
+  ```
+  <activity 
+    android:name=".DisplayMessageRecieverActivity"
+    android:parentActivityName=".MainActivity">  <· declare activity-logical-parent
+                                                    => "Up" button automatically added 
+                                                       in app bar!!!
+    <meta-data                                   <· meta-data tag required for API<=15
+        android:name="android.support.PARENT_ACTIVITY"
+        android:value=".MainActivity" />
+  </activity>
+  ```
+[[}]]
+
+# Room persistence library [[{persistence.sql,PM.lowcode]]
+* <https://developer.android.com/training/data-storage/room/>
+* The Room persistence library provides an abstraction layer over 
+  SQLite to allow fluent database access while harnessing the full 
+  power of SQLite. In particular, Room provides the following benefits:
+  1. Compile-time verification of SQL queries.
+  2. Convenience annotations that minimize repetitive and error-prone boilerplate code.
+  3. Streamlined database migration paths.
+* Because of these considerations, we highly recommend that you use 
+  Room instead of using the SQLite APIs directly.
+* Room is part of the Android Architecture Components, and it integrates
+  seamlessly with other components like LiveData and ViewModel. 
+  This allows for easier implementation of data observing and lifecycle management. 
+[[}]]
+
+# DBFlow (Room Alternative) [[{persistence.sql,]]
+* <https://github.com/agrosner/DBFlow>
+* Alternative to Room. feature-rich Kotlin database library
+  built on SQLite,
+* It's NOT integrated with LiveData or ViewModel,
+  but it allows for more flexibility in defining relationships between
+  entities and performing complex queries.
+* NOTE: It looks like Room is preferred for more situations.
+  - annotation processing used to generate SQLite boilerplate.
+  - "powerful" SQLite query language to simplify access,
+    adhering as closely as possible native SQLite. e.g:
+    ```
+    | select(name, screenSize)
+    | .from(Android.class)
+    | .where(name.is("Nexus 5x"))
+    |   .and(version.is(6.0))
+    | .querySingle()
+    ```
+[[}]]
+
+
+
+# Android Architecture Components 1.0 (2017) [[{]]
+* <https://www.infoq.com/news/2017/11/android-architecture-components>
+- collection of libraries to design "robust/testable/maintainable apps."
+- Current components: (others on the way)
+  - Lifecycle: used to create activities&fragments aware of their lifecycle.
+    adjusting behavior based on current state.
+    lifecycle methods are called to perform various operations when a
+    state event(initialized, created, started, resumed, destroyed) is
+    triggered.  Lifecycle will hold information about the status,
+    relieving the component of this tasks.
+  - LiveData: observable data holder class aware of lifecycle, [[{architecture.reactive]]
+   recommended to build reactive UIs.  [[}]]
+  - ViewModel: used to hold&manage data for activities or fragments preserved when
+    the UI component is recreated in response user actions (screen
+    rotation, ...)
+  - Room: object-mapping layer storing data in SQLite.   [[{persistence.sql]]
+          with query verification during compilation,
+          Google recommends it over direct  SQLite access":
+          integrated with LiveData and cacheable. [[}]]
+  -  PagedList: (currently alpha) gradually load data in large DDBB queries.
+[[}]]
+
+# Windows USB Driver install: [[{devops.windows]]
+  https://developer.android.com/studio/run/oem-usb
+[[}]]
+
+
+# Read Android Data Folder Without Rooting:
+  ```
+  http://denniskubes.com/2012/09/25/read-android-data-folder-without-rooting/
+  $ adb shell
+  # run-as com.mycompany.myapp
+  # cd /data/data/com.mycompany.myapp/...
+  ```
+
+# Binaries in /opt/adt-bundle-linux-x86_64-20140321/sdk (updated to WARN 2014!!!)
+  ```
+  | platform-tools/systrace/systrace.py                build-tools/android-4.4.2/source.properties tools/lib/monitor-x86_64/monitor tools/hierarchyviewer
+  | platform-tools/fastboot                            build-tools/android-4.4.2/bcc_compat        tools/jobb                       tools/emulator64-x86
+  | platform-tools/adb                                 build-tools/android-4.4.2/aidl              tools/etc1tool                   tools/emulator-arm
+  | build-tools/android-4.4.2/aapt                     tools/monitor                               tools/mksdcard                   tools/emulator-x86
+  | build-tools/android-4.4.2/mipsel-linux-android-ld  tools/android                               tools/emulator64-arm             tools/traceview
+  | build-tools/android-4.4.2/i686-linux-android-ld    tools/emulator                              tools/source.properties          tools/emulator64-mips
+  | build-tools/android-4.4.2/dx                       tools/ddms                                  tools/monkeyrunner               tools/zipalign
+  | build-tools/android-4.4.2/dexdump                  tools/hprof-conv                            tools/uiautomatorviewer          tools/sqlite3
+  | build-tools/android-4.4.2/arm-linux-androideabi-ld tools/lib/plugin.prop                       tools/dmtracedump                tools/draw9patch
+  | build-tools/android-4.4.2/llvm-rs-cc               tools/lib/monitor-x86/monitor               tools/lint
+  ```
+
+
+## Dependency Injection Comparative [[{PM.TODO}]]
+* Dagger2 vs Koin vs Hilt vs etc

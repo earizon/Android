@@ -1,0 +1,114 @@
+# adb & apk  101 [[{]]
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-install.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-reverse.md
+* https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-shell.md
+* adb: Android Debug Bridge: communicate with Android device (or emulator).
+  subcommands can have its own ussage doc (adb shell)
+  REF: <https://developer.android.com/studio/command-line/adb>
+  ```
+  |$ adb devices      <·· Get list of connected devices
+  |$ adb start-server <·· Check whether server is running or start it.
+  |$ adb kill-server  <·· terminate server
+  |
+  |$ adb shell        <·· Start remote interactive shell
+  |$ adb shell getprop<·· Get all properties from device.
+  |$ adb shell pm reset-permissions  <·· reset to default all runtime permissions.
+  |$ adb shell pm \   <·· Revoke a dangerous permission
+  |  revoke $PACKAGE $PERMISSION
+  |$ adb shell input \<·· Trigger key event
+  |  keyevent $KEYCODE
+  |$ adb shell pm \   <··  Clear app's data
+  |  clear $PACKAGE
+  |$ adb shell am \   <·· Start activity.
+  |  start -n $PACKAGE/$ACTIVITY
+  |
+  |# am start \       <·· launch default browser
+  |  -a android.intent.action.MAIN \
+  |  -n com.android.browser/.BrowserActivity
+  |# am start \       <·· launch settings.
+  |   -a android.intent.action.MAIN \
+  |   -n com.android.settings/.Settings
+  |# am start \
+  |   -n com.oficina24x7.indexer/com.oficina24x7.indexer.MainActivity
+  |
+  |$ adb shell am \   <·· Start home activity
+  |  start -W \
+  |  -c android.intent.category.HOME \
+  |  -a android.intent.action.MAIN
+  |
+  |$ adb install -r $FILE.APK <·· Push app ().
+  |  -s $SERIAL_NUMBER overrides $ANDROID_SERIAL
+  |  -r reinstall, keeping its data.
+  |  -d allowing version code downgrade
+  |     (debuggable packages only)
+  |  -d Grant all permissions listed in app manifest.
+  |  --fastdeploy: update only changed parts of the APK
+  |
+  |$ adb -s emulator-5554 \  <·· Uninstall
+  |  uninstall app.apk
+  |
+  |$ adb pull $FILE_OR_DIR_SRC $LOCAL_PATH   <·· device -> local
+  |$ adb push $FILE_OR_DIR_SRC $REMOTE_PATH  <·· local  -> device
+  |
+  |$ adb reverse --list  <·· List all reverse socket connections from emul./devices
+  |$ adb reverse tcp:REMOTE_PORT tcp:LOCAL_PORT
+  |$ adb reverse --remove tcp:REMOTE_PORT
+  |$ adb reverse --remove-all
+  |
+  |$ adb logcat -s -d UNIVERSAL_INDEXER:d   
+  |  Options include:
+  |  -s              Set default filter to silent.
+  |                  Like specifying filterspec '*:s'
+  |  -f <filename>   Log to file. Default to stdout
+  |  -r [<kbytes>]   Rotate log every kbytes. (16 if unspecified). Requires -f
+  |  -n <count>      Sets max number of rotated logs to <count>, default 4
+  |  -v <format>     Sets the log print format, where <format> is one of:
+  |                      brief process tag thread raw time threadtime long
+  |                      (defaults to env.var ${ANDROID_PRINTF_LOG})
+  |  -c              clear (flush) the entire log and exit
+  |  -d              dump the log and then exit (don't block)
+  |  -t <count>      print only the most recent <count> lines (implies -d)
+  |  -g              get the size of the log's ring buffer and exit
+  |  -b <buffer>     Request alternate ring buffer, 'main', 'system', 'radio'
+  |                  or 'events'. Multiple -b parameters are allowed and the
+  |                  results are interleaved. The default is -b main -b system.
+  |  -B              output the log in binary
+  |  filterspecs are a series of <tag>[:priority], <tag>[:priority], ...
+  |    Priority: V Verbose,D Debug (default), I Info, W Warn, E Error, F Fatal, S Silent
+  | filterspec defaults to ${ANDROID_LOG_TAGS} || '*:I'
+  ```
+
+## AAPT: Android Asset Packaging Tool
+
+- https://github.com/tldr-pages/tldr/blob/master/pages/common/aapt.md
+  ```
+  |$ aapt list app.apk   <·· List files contained in an APK archive.
+  |$ aapt dump badging \ <·· Display app's metadata (version, permissions, etc.)
+  |  app.apk
+  |$ aapt package -F     <·· Create APK with files from directory.
+  |  app.apk $PATH_TO_DIR
+  ```
+
+## DevOps: APK (replaced by AAPT)
+- https://github.com/tldr-pages/tldr/blob/master/pages/common/apktool.md
+  ```
+  |$ apktool d $FILE.apk <·· Decode an APK file.
+  |$ apktool b $DIR_PATH <·· Build APK file from DIR
+  |$ apktool if $FRAMEWORK.APK <·· Install&store a framework
+  ```
+
+* androguard: Reverse engineering
+* REF
+  * <https://github.com/androguard/androguard>
+  * <https://github.com/tldr-pages/tldr/blob/master/pages/common/androguard.md>
+  ```
+  |$ androguard axml APP.apk   <·· Display Android app manifest
+  |$ androguard apkid APP.apk  <·· Display app metadata (version and app ID)
+  |$ androguard decompile \    <·· Decompile Java code from an app.
+  |  APP.apk --output DIR_PATH
+  |https://github.com/tldr-pages/tldr/blob/master/pages/common/dexdump.md
+  ```
+
+[[}]]
+

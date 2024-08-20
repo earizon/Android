@@ -1,0 +1,171 @@
+[[{architecture.reactive.jetpack]]
+# Jetpack
+
+* <https://developer.android.com/jetpack/compose>
+* declarative toolkit for building UI to simplify UI development.
+  using a reactive programming model.
+
+* Summary from <https://developer.android.com/jetpack/compose/tutorial>
+
+  ```
+  | Android Studio -> New Project
+  | -> select "Empty Compose Activity" (under 'Phone and Tablet' category)
+  |    (A template will be created with a default theme to
+  |     customize MaterialTheme inside ui/theme/Theme.kt)
+  ```
+
+## Lesson 1
+<!-- { --> 
+  ```
+  | import android.os.Bundle
+  | import androidx.activity.ComponentActivity
+  | import androidx.activity.compose.setContent
+  | import androidx.compose.material.Text
+  |
+  | import androidx.compose.runtime.Composable
+  | import androidx.compose.ui.tooling.preview.Preview
+  |
+  | import androidx.compose.foundation.lazy.LazyColumn  <·· (or LazyRow): Lazy => render only elements   [[{performance]]
+  |                                                         visible on screen (very efficient for long
+  |                                                         lists, ...) [[}]]
+  | import androidx.compose.foundation.lazy.items
+  |
+  | data class Message(val author: String, val body: String)
+  |
+  | @Composable fun Conversation(messages: List<Message>) {
+  |     LazyColumn {                             <·· Composable taking an (lazy) 'items' list ("children of column")
+  |         items(messages:Message) {
+  |           messageN -> MessageCard(messageN)       <···  Its lambda receives a parameter (messageN)
+  |         }                                               that is called for each item of the provided List.
+  |     }
+  | }
+  |
+  | @Preview @Composable fun PreviewConversation() {
+  |     ComposeTutorialTheme {
+  |         Conversation(SampleData.conversationSample)
+  |     }
+  | }
+  |
+  | class MainActivity : ComponentActivity() {
+  |   override fun onCreate(savedState: Bundle?) {
+  |     super.onCreate(savedState)
+  |     setContent {                //   <·· set content block, definingactivity's
+  |                                          layout (where composable functions are called)
+  |       ComposeTutorialTheme {           <·· wrapping around a Material theme allows composables
+  |                                            to inherit styles for consistency.
+  |        Surface(                        <·· '@Composable' function!!!
+  |          modifier =                        Jetpack is built @Composables
+  |            Modifier.fillMaxSize()){      defining app's UI by describing
+  |            MessageCard(                <·· how it should look and
+  |              Message("...", "..."))        providing data dependencies
+  |        }                                   (vs focus on UI's construction).
+  |       }                                    Text will be mapped/compiled to a text label on screen
+  | }                                        by Jetpack Compose.
+  |
+  |     ··· @Preview to preview within A.Studio WITHOUT BUILDING/INSTALLING THE FINAL APP
+  |     ·   Design/code -> click on split for the Preview Window.
+  |     ·   NOTE: It only works with 0-params functions. If that's not the case, we use a preview
+  | ┌───┴──┐      around the real class to test it with some arbitrary test value/s.
+  | @Preview  @Composable
+  | fun PreviewMessageCard() {   <·····┐
+  |   ComposeTutorialTheme {           · <·· Don't forget to use same theme used in real app
+  |     Surface { MessageCard(...) }   ·     <··· Arbitratry values to preview the @Composable.
+  |   }                                ·
+  | }                                  ·
+  |                                    ·
+  | @Composable                        ·    <··· Custom Composable fun.
+  | fun MessageCard(msg: Message) {    ·    <··· composables with arguments can not use @Preview.
+  |                                    └········ FIX: create @Preview PreviewMessageCard
+  |   Row(                                     <·· Arrage horizontally
+  |      modifier = Modifier.padding(all = 8.dp)) { <·· decorate/configure size,layout,appearance,
+  |     Image(                                          or clickable/... interactions
+  |       painter = painterResource(
+  |                  R.drawable.profile_picture),
+  |       contentDescription = null,
+  |       modifier = Modifier.size(40.dp)
+  |           .clip(CircleShape)
+  |           .border(1.5.dp,
+  |              MaterialTheme.colors.secondaryVariant,
+  |              CircleShape)
+  |     )
+  |     Spacer(modifier = Modifier.width(8.dp))
+  |
+  |     // keep track message is/is-not expanded
+  |     var isExpanded by remember {         // <·· STORE LOCAL STATE IN MEMORY by using 'remember'
+  |         mutableStateOf(false)  }         //   <·· TRACK CHANGES TO THE VALUE PASSED TO 'mutableStateOf':
+  |                                          //        Composable (and children) will redraw automatically
+  |                                          //        when the value is updated.  THIS IS CALLED RECOMPOSITION.
+  |     val surfaceColor by                  //        'by' need to import androidx.compose.runtime.getValue (and setValue)
+  |         animateColorAsState(             //   <·· Animate color change
+  |        if (isExpanded)
+  |           MaterialTheme.colors.primary
+  |        else
+  |           MaterialTheme.colors.surface,
+  |       )
+  |
+  |     Column(                                // <·· Arrange elements vertically.
+  |       modifier = Modifier.clickable
+  |              { isExpanded = !isExpanded }) // <·· toggle var. when clicking on Column
+  |     {
+  |       Text(
+  |           text = msg.author,
+  |           color = MaterialTheme.colors.secondaryVariant,
+  |           style = MaterialTheme.typography.subtitle2
+  |       )
+  |
+  |       Spacer(modifier = Modifier.height(4.dp))
+  |
+  |       Surface(
+  |           shape = MaterialTheme.shapes.medium,
+  |           elevation = 1.dp,
+  |           color = surfaceColor,
+  |           modifier = Modifier
+  |                      .animateContentSize() // <·· Animate modifier for content size
+  |                      .padding(1.dp) ) {
+  |               text = msg.body,
+  |               modifier = Modifier.padding(all = 4.dp),
+  |               maxLines = if (isExpanded) Int.MAX_VALUE else 1, //  Int.MAX_VALUE => display all its content
+  |               style = MaterialTheme.typography.body2                           1 => display 1st line only
+  |       }
+  |     }
+  |   }
+  | }
+  ```
+  <!-- } -->
+
+## Lesson 2: Layouts
+
+-  ex: list of messages that can be expanded with some animations.
+
+- Compose is built to support Material Design principles, built around three pillars:
+  - Color     : Use MaterialTheme.colors to style with colors from the wrapped theme.
+  - Typography: Material Typography styles are available in the MaterialTheme,
+                just add them to the Text composables.
+  - Shape     : add the "final touches". First, wrap the message body text around a
+                Surface composable. Doing so allows customizing the message body's
+                shape and elevation. Padding is also added to the message for a better layout.
+ [[}]]
+
+
+
+[[{arch.reactive.livedata]] 
+# JetPack LiveData 
+* <https://developer.android.com/topic/libraries/architecture/livedata>
+
+* observable data holder class. Unlike a regular observable, LiveData is
+  lifecycle-aware, meaning it respects the lifecycle of other app components,
+  such as activities, fragments, or services.
+* This awareness ensures LiveData only updates app component observers that
+  are in an active lifecycle state.
+* LiveData considers an observer, represented by the Observer class, to be in
+  an active state if its lifecycle is in the STARTED or RESUMED state.
+* LiveData only notifies active observers about updates. Inactive observers
+  registered to watch LiveData objects aren't notified about changes.
+* You can register an observer paired with an object that implements the
+  LifecycleOwner interface. This relationship allows the observer to be removed
+  when the state of the corresponding Lifecycle object changes to DESTROYED. 
+* This is especially useful for activities and fragments because they can safely
+  observe LiveData objects and not worry about leaks—activities and fragments
+  are instantly unsubscribed when their lifecycles are destroyed.
+
+[[arch.reactive.livedata}]] 
