@@ -787,5 +787,57 @@ developer sticks to the rules, below /mnt/sdcard/Android/data/<package_name>.
   | Priotiry 14: API level (v3, v5, v7, ...)
   ```
 
+[[{security.secret_mng,security.cryptography,qa.best_patterns]]
+## Strongbox Keystore
+* <https://developer.android.com/privacy-and-security/keystore>
+
+HSM ... Android 9+ (API level 28+) can have a StrongBox Keymaster, 
+an implementation of the Keymaster or Keymint HAL ... in a
+*** hardware security module-like secure element**.
+
+StrongBox explicitly refers to devices such as 
+  * embedded Secure Elements (eSE)
+  * on-SoC secure processing units (iSE).
+Such modules contains the following:
+* Its own CPU
+* Secure storage
+* true random-number generator
+* mechanisms to resist ... unauthorized apps
+* Secure timer
+* Reboot notification pin (or equivalent),
+ like general-purpose input/output (GPIO)
+
+To support low-power a subset of algorithms and key sizes are supported:
+* RSA 2048
+* AES 128 and 256
+* ECDSA, ECDH P-256
+* HMAC-SHA256 (key sizes between 8 and 64 bytes)
+* Triple DES
+* Extended Length APDUs
+* Key Attestation
+* Amendment H support for upgrade
+
+when using the KeyStore class ... call setIsStrongBoxBacked() 
+
+[[security.secret_mng}]]
+
+[[{PM.whats_new]]
+## Android 15 Brings Desktop-Like Windowing UX on Tablets
+
+For developers, making their apps ready to take advantage of desktop 
+windowing means implementing layout optimizations to adapt to 
+different screen sizes and device configurations. This requirement 
+corresponds to what Google labels Tier 2 support for large screens, 
+which is less demanding than the top tier, Tier 1, where apps are 
+specifically designed for different form factors, including tablets, 
+foldables, and ChromeOS. Besides being responsive or adaptive, Tier 2 
+apps must also support different input devices, such as keyboard, 
+mouse, and trackpad.
+
+For Tier 3 apps, which run full screen, developers will need to 
+implement support for window size classes to adapt layout, content, 
+and interaction to different windows dimensions and make sure they 
+persist layout configuration change across sessions.
+[[PM.whats_new}]]
 
 <!-- } -->

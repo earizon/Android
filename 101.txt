@@ -198,8 +198,86 @@
 
   | }
   ```
-
 [[}]]
+
+[[{doc_has.comparative]]
+## Activity Context vs Application Context
+
+* REF: <https://medium.com/@mahmoud.alkateb22/activity-context-vs-application-context-a-deep-dive-into-android-development-94fc41233de7>
+
+
+* Contexts "connects" the running Android app with the underlying Android OS
+  allowing to:
+  * access to global information about an **application environment** 
+  * access to application resources
+  * calls     application level operations (launching activities,
+    broadcasting/receiving intents, 
+  * access to ashared preferences and databases.
+
+* Activity Context: "Short" live context. Destroyed when rotating the device, ...<br/>
+  Ir must be used to perform operations with a life scope of the Activity
+  itself (probably for managing UI elements, ...). Eg:
+  ```
+  Toast.makeText(
+     this@MainActivity,         // It refers to the Activity Context of MainActivity
+     "This is a toast message!", 
+     Toast.LENGTH_SHORT).show()
+  ```
+* Application Context: Lifespan of Application.
+
+
+* Common Problems:
+  * ViewModels are designed to survive configuration changes such as
+    screen rotations, enabling the data to outlive the lifecycle of
+    an Activity or Fragment.<br/>
+    A reference to an activity in the ViewModel instance can hold a 
+    reference to an already destroyed Activity:
+    ```
+    | class MainActivity : ComponentActivity() {
+    |   private val viewmModel by hiltViewModel()
+    |   override fun onCreate(savedInstanceState: Bundle?) {
+    |     super.onCreate(savedInstanceState)
+    |     viewModel.context = this.  // < Memory-Leak:
+    |       setContent {             //   When the activity is destroyed a memory
+    |           MyApp()              //   the GC can not destroy it since it is
+    |       }                        //   still referenced by the viewModel.
+    |   }
+    | }
+    | 
+    | class MyViewModel : ViewModel() {
+    |   var context : Context? = null
+    | }
+    ```
+ 
+* Using the Application Context instead with the help of Hilt/dagger:
+  (Recommended dependency injection framework [[{qa.best_patterns}]]):
+  ```
+  | import android.app.Application 
+  | import dagger.hilt.android.HiltAndroidApp 
+  | 
+  | @HiltAndroidApp 
+  | class MyApplication : Application()
+  | 
+  | @Module
+  | @InstallIn(SingletonComponent::class)
+  | object AppModule {
+  | 
+  |   @Provides
+  |   @Singleton
+  |   fun provideApplicationContext(
+  |      application: MyApplication 
+  |   ) : Context = application.applicationContext 
+  | } //            └── safe app context ────────┘
+  |   //                will be injected into VieModel instances
+  | @HiltViewModel         // |
+  | class MyViewModel      // |
+  | @Inject constructor(   // v
+  |    private val context: Context
+  | )
+  ```
+[[doc_has.comparative}]]
+
+
 
 # BroadcastReceiver (subclasses)  [[{]]
 - broadcast receiver: allows component to receive events (Intent objects in practice)

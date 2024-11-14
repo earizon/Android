@@ -1,42 +1,79 @@
-# adb & apk  101 [[{]]
+# Android Debug Bridge (adb)  101 [[{]]
 * https://github.com/tldr-pages/tldr/blob/master/pages/common/adb.md
 * https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-install.md
 * https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-reverse.md
 * https://github.com/tldr-pages/tldr/blob/master/pages/common/adb-shell.md
 * adb: Android Debug Bridge: communicate with Android device (or emulator).
-  subcommands can have its own ussage doc (adb shell)
-  REF: <https://developer.android.com/studio/command-line/adb>
   ```
-  |$ adb devices      <·· Get list of connected devices
-  |$ adb start-server <·· Check whether server is running or start it.
-  |$ adb kill-server  <·· terminate server
+  | $ cd ${HOME}/Android/Sdk/platform-tools
+  | $ ls -ld *
+  | -rwxr-xr-x. 1 earizon earizon 7822088 May 20 16:38 adb
+  | -rwxr-xr-x. 1 earizon earizon  303608 May 20 16:38 etc1tool
+  | -rwxr-xr-x. 1 earizon earizon 2480432 May 20 16:38 fastboot
+  | -rwxr-xr-x. 1 earizon earizon   13312 May 20 16:38 hprof-conv
+  | drwxr-xr-x. 2 earizon earizon    4096 May 20 16:38 lib64
+  | -rwxr-xr-x. 1 earizon earizon  264016 May 20 16:38 make_f2fs
+  | -rwxr-xr-x. 1 earizon earizon  264000 May 20 16:38 make_f2fs_casefold
+  | -rwxr-xr-x. 1 earizon earizon  874336 May 20 16:38 mke2fs
+  | -rw-r--r--. 1 earizon earizon    1157 May 20 16:38 mke2fs.conf
+  | -rw-r--r--. 1 earizon earizon 1128669 May 20 16:38 NOTICE.txt
+  | -rw-r--r--. 1 earizon earizon   18404 May 20 16:38 package.xml
+  | -rw-r--r--. 1 earizon earizon      38 May 20 16:38 source.properties
+  | -rwxr-xr-x. 1 earizon earizon 3335144 May 20 16:38 sqlite3
+  ```
+* It is recommended to update when upgrading Android Studio.
+  for example, from within Android Studio:
+  ```
+  | Settings 
+  |   -> "Language and Tools"
+  |      -> "Android SDK"
+  |         -> "SDK Tools"
+  ```
+
+* REF: <https://developer.android.com/studio/command-line/adb>
+  ```
+  |┌─ $: prompt of development machine (vs Android) shell
+  |$ adb devices       # <·· Get list of connected devices
+  |$ adb start-server  # <·· Check whether server is running or start it.
+  |$ adb kill-server   # <·· terminate server
   |
-  |$ adb shell        <·· Start remote interactive shell
-  |$ adb shell getprop<·· Get all properties from device.
-  |$ adb shell pm reset-permissions  <·· reset to default all runtime permissions.
-  |$ adb shell pm \   <·· Revoke a dangerous permission
-  |  revoke $PACKAGE $PERMISSION
-  |$ adb shell input \<·· Trigger key event
-  |  keyevent $KEYCODE
-  |$ adb shell pm \   <··  Clear app's data
-  |  clear $PACKAGE
-  |$ adb shell am \   <·· Start activity.
-  |  start -n $PACKAGE/$ACTIVITY
+  │#           ┌─────┬─ command "within" Android device
+  |$ adb shell getprop          
+  |$ adb shell         # <·· Enter shell inside Android
+  |                    #     (vs dev.machine shell)
   |
-  |# am start \       <·· launch default browser
+  |─── Commands executed inside Android shell (after `adb shell`)
+  |
+  |┌─ #: prompt of Android (vs development machine) shell
+  |v ┌┬─ pm: package manager
+  |# pm reset-permissions #  <·· reset to default all runtime permissions.
+  |# pm \   
+  |  revoke $PACKAGE $PERMISSION # <·· Revoke a dangerous permission
+  |# input 
+  |  keyevent $KEYCODE #  <·· Trigger key event
+  |# pm clear $PACKAGE # <··  Clear app's data
+  |
+  |  ┌┬─ am: activity manager
+  |$ am start \   
+  |  -n some.pkg/some.pkg.MainActivity # <·· Start activity
+  |# am start         
   |  -a android.intent.action.MAIN \
-  |  -n com.android.browser/.BrowserActivity
-  |# am start \       <·· launch settings.
+  |  -n com.android.browser/.BrowserActivity  # <·· start browser
+  |                                           #     through activity 
+  |                                           #     ("inside" shell)
+  |# am start \       
   |   -a android.intent.action.MAIN \
-  |   -n com.android.settings/.Settings
-  |# am start \
+  |   -n com.android.settings/.Settings       # <·· launch settings
+  |# am start \        
   |   -n com.oficina24x7.indexer/com.oficina24x7.indexer.MainActivity
-  |
-  |$ adb shell am \   <·· Start home activity
-  |  start -W \
+  |# am start \   
+  |  -W \
   |  -c android.intent.category.HOME \
-  |  -a android.intent.action.MAIN
+  |  -a android.intent.action.MAIN            # <·· Start home activity
   |
+  |# exit                                     # <·· Exit Android shell
+  |                                           #     (back to host shell)
+  |┌─················································┘
   |$ adb install -r $FILE.APK <·· Push app ().
   |  -s $SERIAL_NUMBER overrides $ANDROID_SERIAL
   |  -r reinstall, keeping its data.
@@ -79,7 +116,7 @@
   | filterspec defaults to ${ANDROID_LOG_TAGS} || '*:I'
   ```
 
-## AAPT: Android Asset Packaging Tool
+# Android Asset Packaging Tool (AAPT)
 
 - https://github.com/tldr-pages/tldr/blob/master/pages/common/aapt.md
   ```
@@ -90,7 +127,7 @@
   |  app.apk $PATH_TO_DIR
   ```
 
-## DevOps: APK (replaced by AAPT)
+# Android Packaging Tool (APK), replaced by the newer AAPT
 - https://github.com/tldr-pages/tldr/blob/master/pages/common/apktool.md
   ```
   |$ apktool d $FILE.apk <·· Decode an APK file.
@@ -98,17 +135,23 @@
   |$ apktool if $FRAMEWORK.APK <·· Install&store a framework
   ```
 
-* androguard: Reverse engineering
+[[{troubleshooting.debugging]]
+# androguard: Debug DEX,ODEX,APK,Android binary xml, 
+
+* Python based tool to inspect/Disassemble/decompile DEX/ODEX/APK/Android binary xml/resources,...
+
 * REF
   * <https://github.com/androguard/androguard>
   * <https://github.com/tldr-pages/tldr/blob/master/pages/common/androguard.md>
-  ```
+
+```
   |$ androguard axml APP.apk   <·· Display Android app manifest
   |$ androguard apkid APP.apk  <·· Display app metadata (version and app ID)
   |$ androguard decompile \    <·· Decompile Java code from an app.
   |  APP.apk --output DIR_PATH
-  |https://github.com/tldr-pages/tldr/blob/master/pages/common/dexdump.md
+|https://github.com/tldr-pages/tldr/blob/master/pages/common/dexdump.md
   ```
+[[troubleshooting.debugging}]]
 
 [[}]]
 
